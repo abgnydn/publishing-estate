@@ -1,0 +1,35 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.1/schema.json",
+  // The formatter is off. facts.json and platforms.json are laid out by hand so
+  // a fact entry reads as a block, and the .mjs files carry long explanatory
+  // comments beside the rule each one implements. Reflowing either buys nothing
+  // and rewrites files that are read far more often than they are edited.
+  // The linter and gitleaks still run on every commit.
+  "formatter": { "enabled": false },
+  "linter": {
+    "rules": {
+      "complexity": {
+        // The escape is deliberate inside the character class, and the comma
+        // operator is a one-line reduce accumulator with a comment above it.
+        "noCommaOperator": "off",
+        "noUselessEscapeInRegex": "off"
+      },
+      "style": {
+        "useTemplate": "off"
+      },
+      "suspicious": {
+        "noAssignInExpressions": "off"
+      }
+    }
+  },
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "off"
+      }
+    }
+  },
+  "files": {
+    "includes": ["**", "!render/generated"]
+  }
+}

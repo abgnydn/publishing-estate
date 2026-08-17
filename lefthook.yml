@@ -1,0 +1,61 @@
+# lefthook.yml — polyglot git hooks (TS/JS · Python · Rust) + secret scanning
+# Copy into any repo root, then run:  lefthook install
+# Tools used are already installed globally: biome, ruff, cargo/rustfmt/clippy, gitleaks.
+#
+# Hooks only touch STAGED files (fast), and auto-restage what they fix.
+
+pre-commit:
+  parallel: true
+  commands:
+    biome:
+      glob: "*.{js,jsx,ts,tsx,mjs,cjs,json,jsonc,css}"
+      run: biome check --write --no-errors-on-unmatched {staged_files}
+      stage_fixed: true
+
+    ruff-lint:
+      glob: "*.py"
+      run: ruff check --fix {staged_files}
+      stage_fixed: true
+
+    ruff-format:
+      glob: "*.py"
+      run: ruff format {staged_files}
+      stage_fixed: true
+
+    rustfmt:
+      glob: "*.rs"
+      run: rustfmt --edition 2021 {staged_files}
+      stage_fixed: true
+
+    gitleaks:
+      run: gitleaks git --staged --redact --no-banner
+
+    # This repository runs its own gates. Both are rule checks with no network
+    # and no subprocesses, so they are affordable on every commit.
+    facts:
+      run: node facts/check-facts.mjs
+
+    render-gate:
+      run: node render/build-sites.mjs --check
+
+pre-push:
+  parallel: true
+  commands:
+    # Full secret scan over history before anything leaves the machine
+    gitleaks-history:
+      run: gitleaks git --redact --no-banner
+
+    # Strict lint gate for Rust crates (slower — runs on push, not commit)
+    clippy:
+      glob: "*.rs"
+      run: cargo clippy --all-targets --all-features -- -D warnings
+
+    # The adversarial suite for the publish gate. Runs against a throwaway
+    # ledger directory, so it never touches the real one.
+    hook-suite:
+      run: bash test/hook-test.sh
+
+    # The render gate must be demonstrably red against the planted source, or
+    # the demonstration in the README has stopped demonstrating anything.
+    render-gate-red:
+      run: '! node render/build-sites.mjs --check --source render/sites.source.withdrawn.json'

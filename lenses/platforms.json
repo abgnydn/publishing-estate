@@ -1,0 +1,284 @@
+{
+  "_readme": [
+    "Every public surface, and what is true about posting to it.",
+    "",
+    "This exists for the same reason facts.json does. The per-platform rules were living",
+    "as prose inside one agent definition. At one platform that is fine; at six it becomes",
+    "six drifting copies of the same checklist, which is the bug facts.json was built to",
+    "kill. Rules live here; the agents read them.",
+    "",
+    "Rules:",
+    "  1. Agents and checkers read this file. No platform rule is hardcoded in an agent.",
+    "  2. Every entry in rules[] and evidence[] carries a source and a date. A rule with",
+    "     no source is a guess, and guesses about moderation get posts removed.",
+    "  3. reversibility sets verification depth, NOT platform. See _reversibility below.",
+    "  4. status 'burned' means do not post. It is set by evidence, and cleared only by",
+    "     evidence — a changed rule, or rebuilt standing.",
+    "  5. Where a platform's state is genuinely unknown, say so with status 'unaudited'.",
+    "     An invented rule is worse than a recorded gap.",
+    "",
+    "The entries below are the author's own, trimmed to one platform per reversibility",
+    "tier plus the Reddit entry in full. The Reddit rules are derived from his own",
+    "public posting record and are kept as the worked example of what an evidence-",
+    "backed platform rule looks like: a rule, the observation that produced it, the",
+    "source it can be re-derived from, and the date it was true."
+  ],
+  "_reversibility": [
+    "The axis that decides how much verification runs before publishing. It cuts across",
+    "platforms, not along them: an archival deposit and an npm publish are the same problem,",
+    "and a tweet and a LinkedIn post are the same problem, however different the sites are.",
+    "",
+    "  permanent   Cannot be unpublished. DOIs, npm versions, git tags.",
+    "              -> all four lenses, and a human reads it before it goes.",
+    "  notifies    Emails subscribers the instant it posts; editing does not unsend.",
+    "              GitHub issues, PRs, comments.",
+    "              -> refuter + reproducer. recipient too when the thread has named",
+    "                 participants. This is tier 2 of 5, not tier 1: proportionate.",
+    "  moderated   A third party can remove it, and the removal is itself a cost that",
+    "              attaches to the account. Reddit, HuggingFace.",
+    "              -> claim-auditor + recipient, with rules[] checked explicitly.",
+    "  retractable Deleting works. Screenshots and any ranking penalty do not delete.",
+    "              X, LinkedIn.",
+    "              -> claim-auditor.",
+    "  owned       Fully editable by the operator, no third party involved. Own sites,",
+    "              own repos.",
+    "              -> the automation checkers only; no agent needed.",
+    "",
+    "The point of the tier is proportionality. A gate that runs four lenses on everything",
+    "gets turned off. Tiering the depth is what keeps the expensive passes credible when",
+    "they do run."
+  ],
+  "schema_version": 1,
+  "platforms": [
+    {
+      "id": "github",
+      "name": "GitHub",
+      "handle": "abgnydn",
+      "url": "https://github.com/abgnydn",
+      "reversibility": "notifies",
+      "status": "active",
+      "api": "gh api — authenticated, 5000 req/hr. A thread checker polls watched threads.",
+      "rules": [],
+      "register": [
+        "Match the thread's own register; read several existing comments first.",
+        "Actionable payload first, mechanism second.",
+        "A first-time contributor writing four times the length of the entire prior",
+        "discussion is its own signal."
+      ],
+      "cadence": null,
+      "evidence": [
+        {
+          "date": "2026-08-13",
+          "what": "A comment on transformers.js#1599 was posted after four adversarial passes. Two more verifiers returned AFTER posting, each with a real defect in the live text.",
+          "lesson": "Publishing is a barrier. All lenses land before the post goes, not around it.",
+          "source": "https://github.com/huggingface/transformers.js/issues/1599#issuecomment-5288432484"
+        },
+        {
+          "date": "2026-08-13",
+          "what": "A version floor of 4.1.0 was corrected to 4.2.0 before posting, and 4,294,967,295 was corrected to a measured 4,294,967,292.",
+          "lesson": "The value in the source is frequently not the value that ships. Chrome tiers the Dawn limit in Limits.cpp.",
+          "source": "reproducer lens, dawn.node vs Chrome"
+        }
+      ]
+    },
+    {
+      "id": "reddit",
+      "name": "Reddit",
+      "handle": "u/Entphorse",
+      "url": "https://www.reddit.com/user/Entphorse/",
+      "reversibility": "moderated",
+      "status": "active",
+      "api": "www.reddit.com/*.json, browser session, credentials included. No key needed.",
+      "account": {
+        "created": "2020-01",
+        "karma": 48,
+        "posts_total": 24,
+        "posts_technical": 19,
+        "removed": 8,
+        "audited_at": "2026-08-15"
+      },
+      "rules": [
+        {
+          "rule": "Existence claims pass; multiplier claims do not.",
+          "evidence": "19 technical posts. Existence framing scored 0.96 / 0.95 / 0.92 upvote ratio and all survived. Multiplier framing scored 0.61 / 0.43 / 0.40 / 0.40 / 0.27 / 0.20. No existence post below 0.92, no multiplier post above 0.61.",
+          "source": "reddit.com/user/Entphorse/submitted.json",
+          "date": "2026-08-15"
+        },
+        {
+          "rule": "Never paste model-drafted prose into a post or a reply.",
+          "evidence": "r/programming removed the post AND three of his replies under 'No content written mostly by an LLM.' A commenter publicly noted he posted an LLM-generated reply and deleted it. r/LocalLLaMA Rule 3 bans the same thing.",
+          "source": "r/programming/comments/1s7nwdi, r/LocalLLaMA/about/rules.json",
+          "date": "2026-08-15"
+        },
+        {
+          "rule": "Rule 3 carve-out: a non-native English speaker may use an LLM to translate or refine, if the use is disclosed clearly in the post.",
+          "evidence": "r/LocalLLaMA Rule 3, verbatim. Disclosed is permitted; undisclosed is what got him removed twice.",
+          "source": "https://www.reddit.com/r/LocalLLaMA/about/rules.json",
+          "date": "2026-08-15"
+        },
+        {
+          "rule": "Self-promotion must stay under ~10% of activity, and standing in a sub is earned by commenting before posting.",
+          "evidence": "r/LocalLLaMA Rule 4, the 1/10th rule. His ratio was ~100%: zero comments in that sub ever, and all 23 comments at that date were replies defending his own threads elsewhere.",
+          "source": "https://www.reddit.com/r/LocalLLaMA/about/rules.json",
+          "date": "2026-08-15"
+        },
+        {
+          "rule": "State cross-hardware comparisons as cross-hardware in the post body.",
+          "evidence": "The 47-point top comment on r/programming was exactly this: WebGPU on M2 Pro against PyTorch/JAX on a Tesla T4, so fusion gains are conflated with hardware. That critique was correct and was confirmed from his own repos five months later.",
+          "source": "r/programming/comments/1s7nwdi",
+          "date": "2026-08-15"
+        }
+      ],
+      "cadence": {
+        "max_self_links_per_day": 1,
+        "evidence": "Seven posts on 2026-03-30 tripped Reddit's site spam filter; three posts were removed by 'reddit' rather than by any moderator.",
+        "source": "removed_by_category on submitted.json",
+        "date": "2026-08-15"
+      },
+      "subreddits": [
+        {
+          "name": "r/webgpu",
+          "standing": "proven",
+          "record": "21pt @0.96 and 14pt @0.95, both survived. Two organic comments made 2026-05-08/09.",
+          "note": "Small sub, no karma filter. The template: name the real system ported, name the validation reference, link the live demo, no multiplier."
+        },
+        {
+          "name": "r/ScientificComputing",
+          "standing": "proven",
+          "record": "10pt @0.92, survived.",
+          "note": "Works for the domain-science ports."
+        },
+        {
+          "name": "r/LocalLLaMA",
+          "standing": "blocked-on-standing",
+          "record": "1 post 2026-04-08, 2pt @0.75, 0 comments, removed. removed_by_category=moderator with banned_at_utc null and no mod_reason — the signature of AutoModerator, not a human.",
+          "note": "Highest-value sub for this work. Zero comments there ever. Re-earn by answering questions for several weeks without linking anything of his own, then post."
+        },
+        {
+          "name": "r/programming",
+          "standing": "burned",
+          "record": "17pt @0.61, 29 comments, removed under the no-LLM-content rule along with three of his replies.",
+          "note": "Do not post."
+        },
+        {
+          "name": "r/compsci",
+          "standing": "burned",
+          "record": "Three posts, ratios 0.40 / 0.27 / 0.20.",
+          "note": "Downvoted three separate times. Do not post."
+        }
+      ],
+      "open_leads": [
+        {
+          "who": "M4mb0",
+          "what": "Suggested torch.compile + torch.while_loop as the fair Acrobot baseline, since Inductor unrolls the loop and crashes at L=1000. He agreed it would be fair and never ran it.",
+          "why": "The outstanding falsifier for the last standing fusion claim, offered for free.",
+          "source": "r/programming/comments/1s7nwdi",
+          "date": "2026-03-30"
+        }
+      ]
+    },
+    {
+      "id": "x",
+      "name": "X",
+      "handle": "abgnydn_",
+      "url": "https://x.com/abgnydn_",
+      "reversibility": "retractable",
+      "status": "active",
+      "api": "none — browser only.",
+      "handle_note": "Trailing underscore. Three other forms were taken (checked 2026-08-14). Never infer this handle from the GitHub one.",
+      "rules": [
+        {
+          "rule": "Negative signals dominate. One mute costs -58.8 against a like's +0.5, and a report costs -234.0.",
+          "evidence": "home-mixer/params/param.rs. A single post that reads as self-promotion costs more than dozens of good ones earn. This is the strongest argument for the dry register.",
+          "source": "https://github.com/xai-org/x-algorithm",
+          "date": "2026-08-14"
+        },
+        {
+          "rule": "Links are not penalised, they just earn almost nothing. OpenLink is +0.2 against Reply +5.0.",
+          "evidence": "param.rs. Put the artifact link in the first reply because a link-only post earns nothing, not because links are suppressed.",
+          "source": "https://github.com/xai-org/x-algorithm",
+          "date": "2026-08-14"
+        },
+        {
+          "rule": "Replies between mutual follows are boosted 15x.",
+          "evidence": "BidirectionalFollowReplyWeightBoost = 15.0. Getting followed back by ten relevant accounts is worth more than any single post.",
+          "source": "https://github.com/xai-org/x-algorithm",
+          "date": "2026-08-14"
+        }
+      ],
+      "register": [
+        "Draft every post as if it were a line in a benchmark protocol file. If it has rhythm, rewrite it.",
+        "Banned: negation triad, em-dash pivots, punchy fragments, contrast punches, puffery adjectives, persona labels, coined verbs, 'I built X in Y hours', thread emoji.",
+        "One claim per post, with the falsifier stated in the post.",
+        "Numbers in the post text, not only burned into video — the ranking model reads text."
+      ],
+      "cadence": null,
+      "evidence": []
+    },
+    {
+      "id": "linkedin",
+      "name": "LinkedIn",
+      "handle": "abgnydn",
+      "url": "https://www.linkedin.com/in/abgnydn/",
+      "reversibility": "retractable",
+      "status": "unaudited",
+      "api": "none — browser only, and LinkedIn is hostile to automation.",
+      "rules": [],
+      "register": [],
+      "cadence": null,
+      "evidence": [],
+      "gaps": [
+        "The URL is in the identity record and therefore in every JSON-LD sameAs block, so it is published as an identity of his — but nobody has read what it currently says.",
+        "It is the only profile surface never audited against facts.json. Every other surface that went unaudited turned out to carry stale claims: the GitHub profile carried four wrong project descriptions, and three sites carried an inverted sign.",
+        "Assume it is stale until read. Audit is a claim-auditor pass against the live page."
+      ]
+    },
+    {
+      "id": "zenodo",
+      "name": "Zenodo",
+      "handle": null,
+      "url": "https://zenodo.org",
+      "reversibility": "permanent",
+      "status": "active",
+      "api": "DOI resolution — the dois and archives checkers.",
+      "rules": [
+        {
+          "rule": "Author string is matched literally when no ORCID is present, so the name form cannot change mid-record.",
+          "evidence": "11 of 12 records use the ASCII form. Flipping to diacritics before an ORCID exists would split the author permanently.",
+          "source": "identity record",
+          "date": "2026-08-14"
+        }
+      ],
+      "register": [],
+      "cadence": null,
+      "evidence": [
+        {
+          "date": "2026-08-14",
+          "what": "Six stale version DOIs across four files pin a preprint six revisions behind.",
+          "lesson": "A version DOI pins a revision. Cite the concept DOI unless the specific revision is the point.",
+          "source": "the dois checker"
+        }
+      ]
+    },
+    {
+      "id": "own-sites",
+      "name": "Own sites and repos",
+      "handle": null,
+      "url": "https://barisgunaydin.com",
+      "reversibility": "owned",
+      "status": "active",
+      "api": "the sites checker covers 13 live surfaces; the numbers checker re-fetches published numeric claims.",
+      "rules": [
+        {
+          "rule": "A number reaches a public surface only through a fact-id placeholder. There is no path for a hand-typed number.",
+          "evidence": "Three generations of the generated site data were live at once and one of them had the sign inverted — a site published '22% behind WebLLM' for a result that is 16.0% ahead.",
+          "source": "facts/facts.json, zerotvm.phi3.vs_webllm_pct",
+          "date": "2026-08-14"
+        }
+      ],
+      "register": [],
+      "cadence": null,
+      "evidence": []
+    }
+  ]
+}

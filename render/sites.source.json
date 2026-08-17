@@ -1,0 +1,72 @@
+{
+  "_readme": [
+    "Hand-edited source for the generated site data. Every number arrives through a",
+    "fact-id placeholder; there is no path for a hand-typed one. The placeholder",
+    "syntax is in the README — it is not written literally here, because this file",
+    "is itself walked by the resolver.",
+    "",
+    "Surfaces the build grades:",
+    "  SITES.<key>.stats[n].value   headline. Literal number = ERROR. Non-protocol",
+    "                               fact = ERROR. Tally = ERROR. Bound caveat = ERROR",
+    "                               (a tile has nowhere to put it).",
+    "  SITES.<key>.tagline          headline. Same fact rules; a literal number here",
+    "                               is a WARN because taglines carry product names.",
+    "  SITES.<key>.stats[n].label   WARN on a literal number.",
+    "  SITES.<key>.shortDesc        prose. WARN on a literal number. Tallies are",
+    "                               allowed here, on the surface that generates them.",
+    "",
+    "Run `node render/build-sites.mjs --check` to validate this file, and",
+    "the same command with `--source render/sites.source.withdrawn.json` to watch",
+    "the gate refuse a planted one."
+  ],
+  "SITES": {
+    "zerotvm": {
+      "key": "zerotvm",
+      "url": "https://zerotvm.com",
+      "name": "zerotvm.com",
+      "tagline": "Phi-3-mini in the browser on hand-written WGSL kernels, no compiler.",
+      "shortDesc": "A browser LLM runtime whose kernels are written by hand rather than emitted by a compiler. The comparison it exists to make is a same-session paired run against WebLLM on identical weights. It carries {{fact:zerotvm.wgsl_files}} hand-written shaders, a count that lives here because this is the surface that generates it.",
+      "category": "Runtime",
+      "githubRepo": "https://github.com/abgnydn/zero-tvm",
+      "stats": [
+        {
+          "value": "{{fact:zerotvm.phi3.decode_toks}}",
+          "label": "tok/s, Phi-3-mini decode, M2 Max"
+        },
+        {
+          "value": "{{fact:zerotvm.phi3.webllm_decode_toks}}",
+          "label": "tok/s, WebLLM baseline, same session"
+        },
+        {
+          "value": "{{fact:zerotvm.phi3.vs_webllm_pct}}",
+          "label": "percent ahead of that baseline"
+        }
+      ],
+      "cta": "Run it in a tab →"
+    },
+    "gpubench": {
+      "key": "gpubench",
+      "url": "https://gpubench.dev",
+      "name": "gpubench.dev",
+      "tagline": "Crowd-sourced WebGPU compute benchmarks, one row per submitted run.",
+      "shortDesc": "A public benchmark table anyone can add a row to. It holds {{fact:gpubench.total_runs+caveat}} across all workloads. That count is a tally and a live one, so it appears here and nowhere else.",
+      "category": "Data",
+      "githubRepo": "https://github.com/abgnydn/gpubench",
+      "stats": [
+        {
+          "value": "D1-backed",
+          "label": "queried directly, not via a cached endpoint"
+        },
+        {
+          "value": "CC-BY",
+          "label": "snapshot published as a dataset"
+        },
+        {
+          "value": "open submission",
+          "label": "no account required"
+        }
+      ],
+      "cta": "Submit a run →"
+    }
+  }
+}

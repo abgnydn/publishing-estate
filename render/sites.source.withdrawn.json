@@ -1,0 +1,59 @@
+{
+  "_why": [
+    "A planted copy of sites.source.json, present only so the gate can be watched",
+    "failing. Nothing here is published anywhere.",
+    "",
+    "Three plants, one per error class:",
+    "  1. zerotvm.stats[0].value references a fact whose status is WITHDRAWN. That",
+    "     number was retracted and superseded; it is quoted here as a retracted",
+    "     value under test, never as a claim.",
+    "  2. gpubench.tagline references a tally. Its status is protocol, which is not",
+    "     enough: a count that grows is stale the next commit, so it is barred from",
+    "     every headline surface.",
+    "  3. gpubench.stats[0].value is a hand-typed literal. No fact id, so it is not",
+    "     traceable to anything that can be re-run.",
+    "",
+    "Expected: 3 errors, exit 1, nothing written.",
+    "",
+    "The withdrawn-value sweep classifies the number below as DISCLOSED rather",
+    "than LIVE because this block says in as many words that it is retracted."
+  ],
+  "SITES": {
+    "zerotvm": {
+      "key": "zerotvm",
+      "url": "https://zerotvm.com",
+      "name": "zerotvm.com",
+      "tagline": "Phi-3-mini in the browser on hand-written WGSL kernels, no compiler.",
+      "shortDesc": "A browser LLM runtime whose kernels are written by hand rather than emitted by a compiler.",
+      "category": "Runtime",
+      "githubRepo": "https://github.com/abgnydn/zero-tvm",
+      "stats": [
+        {
+          "value": "{{fact:kernelfusion.apple_avg_2865x}}",
+          "label": "plant one: a withdrawn, superseded average"
+        },
+        {
+          "value": "{{fact:zerotvm.phi3.webllm_decode_toks}}",
+          "label": "tok/s, WebLLM baseline, same session"
+        }
+      ],
+      "cta": "Run it in a tab →"
+    },
+    "gpubench": {
+      "key": "gpubench",
+      "url": "https://gpubench.dev",
+      "name": "gpubench.dev",
+      "tagline": "Crowd-sourced WebGPU compute benchmarks, {{fact:gpubench.total_runs}} rows and counting.",
+      "shortDesc": "A public benchmark table anyone can add a row to.",
+      "category": "Data",
+      "githubRepo": "https://github.com/abgnydn/gpubench",
+      "stats": [
+        {
+          "value": "119 devices",
+          "label": "plant three: hand-typed, traceable to nothing"
+        }
+      ],
+      "cta": "Submit a run →"
+    }
+  }
+}

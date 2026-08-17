@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/abgnydn/publishing-estate/gate/ledger-entry.schema.json",
+  "title": "Verification ledger entry",
+  "description": "One lens's verdict on one exact version of one artifact. Written to $PUBLISH_LEDGER_DIR/<artifact_sha256>-<lens>.json. The gate reads the directory, not the agent's report: a verdict that exists only in a transcript has never blocked anything, and two lenses have returned findings after the artifact was already live. The filename carries the hash so the gate can find the relevant entries in one directory scan without parsing every file, and so an entry cannot be silently re-pointed at a different artifact.",
+  "type": "object",
+  "required": ["artifact_sha256", "artifact_path", "lens", "verdict"],
+  "additionalProperties": true,
+  "properties": {
+    "artifact_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "sha256 of the exact bytes the lens read. Must equal the hash in the filename; the gate skips any entry where they disagree. Editing the artifact changes this and revokes the approval, which is the point: an approval covers the bytes that were reviewed."
+    },
+    "artifact_path": {
+      "type": "string",
+      "description": "Absolute path to the file as read. Used only to detect the stale case — entries for this path under a different hash tell the operator the file was edited after verification, rather than reporting a bare 'no entries found'."
+    },
+    "lens": {
+      "type": "string",
+      "description": "Which lens wrote this. Quorum counts DISTINCT values, so two runs of the same lens count once. The four shipped here are refuter, reproducer, claim-auditor, recipient; the name is free text so an operator can add their own.",
+      "minLength": 1
+    },
+    "verdict": {
+      "enum": ["SAFE", "DO-NOT-POST"],
+      "description": "SAFE counts toward quorum. DO-NOT-POST vetoes outright, regardless of how many SAFEs exist, and cannot be outvoted. Any other value is treated as malformed and reported as skipped rather than silently ignored. There is no ABSTAIN: a lens that could not verify writes DO-NOT-POST, because CANNOT-VERIFY is not agreement."
+    },
+    "anchored": {
+      "type": "boolean",
+      "default": false,
+      "description": "True only when 'note' cites something external to the lens's own judgement: literal command output, a fetched primary source, or a file:line. At least one SAFE entry must set this or the gate denies. Basis: nine judges drawn from seven model families carry roughly two effective votes (arXiv 2605.29800), so counting SAFEs measures family agreement rather than evidence. Reading-only unanimity does not clear the gate."
+    },
+    "date": {
+      "type": "string",
+      "description": "ISO 8601. Written by the lens, not read by the gate — an entry is bound by hash, not by age."
+    },
+    "note": {
+      "type": "string",
+      "description": "One line saying what settled it. When 'anchored' is true this is where the evidence goes, and it is the field a human reads when deciding whether the anchor is real."
+    }
+  },
+  "examples": [
+    {
+      "artifact_sha256": "3b1f0e4c8a2d9b7e6f5a4c3d2e1b0a9f8e7d6c5b4a3928170615243342516071",
+      "artifact_path": "/Users/you/drafts/comment.md",
+      "lens": "reproducer",
+      "verdict": "SAFE",
+      "anchored": true,
+      "date": "2026-08-17T09:14:02Z",
+      "note": "Ran the reader's first command verbatim in a clean dir: `npx pkg@4.2.0 --version` -> 4.2.0, loads the model the draft recommends. 4.1.0 fails as the draft claims."
+    },
+    {
+      "artifact_sha256": "3b1f0e4c8a2d9b7e6f5a4c3d2e1b0a9f8e7d6c5b4a3928170615243342516071",
+      "artifact_path": "/Users/you/drafts/comment.md",
+      "lens": "claim-auditor",
+      "verdict": "DO-NOT-POST",
+      "anchored": true,
+      "date": "2026-08-17T09:21:47Z",
+      "note": "11 claims checked, 1 wrong: the draft calls the trainer GPU AdamW; trainer.ts:212 runs Adam in JavaScript on the CPU."
+    }
+  ]
+}

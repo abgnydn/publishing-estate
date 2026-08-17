@@ -37,10 +37,11 @@ deleting a number to updating it, and this file follows it everywhere the
 number is not itself the claim being made.
 
 **Requirements.** `node` (developed and tested on v24; plain ESM, no
-dependencies), `jq` and `shasum` for the gate and its test suite, `bash`.
-Four `produced_by` commands in the example registry point at the author's
-checkouts and live endpoints; on any other machine they report UNREACHABLE,
-which the checker treats as unverified, never as agreement.
+dependencies), `jq`, `python3` and `shasum` for the gate and its test suite,
+`bash`. Four `produced_by` commands in the example registry point at the
+author's checkouts and report UNREACHABLE on any other machine — treated as
+unverified, never as agreement. A fifth reads a live public endpoint, runs
+anywhere with network, and is compared inside its declared drift band.
 
 ---
 
@@ -415,13 +416,14 @@ in the underlying error costs points the same way: a false positive actively
 steers the operator wrong, while a false negative only slows things down
 (arXiv 2606.09078).
 
-### Execution beats reading, and the control is randomized
+### Execution beats reading, and the control proves it
 
 The sharpest result here is Stechly et al. (arXiv 2310.12397). Self-critique
 made models worse, from 16% to 1%, while an external verifier reached roughly
-40%. The control is what matters: a *randomized* verifier also reached roughly
-40%. The verification loop carries the value, and unanchored self-judgement is
-noise. Guey and Bougault (arXiv 2606.20093) is the complement: with validity
+40%. The control is what matters: with the sound verifier still deciding
+correctness, randomized and even fabricated feedback reached the same roughly
+40% — the critique content is irrelevant, and the external check carries the
+value. Guey and Bougault (arXiv 2606.20093) is the complement: with validity
 decided by a deterministic verifier, self-preference is weak or absent — no
 detectable effect, with anything under roughly 13 points not excluded at their
 sample size.
@@ -470,10 +472,10 @@ without a number cannot go stale.
 
 ### The audit trail is arriving as an obligation, and executing it is the moat
 
-The NeurIPS 2026 PPT policy now requires, of submissions flagged for
-significant AI involvement, a pre-AI, post-AI and final version-history audit
-trail, and states the expectation directly: "[W]e expect that in future years
-this kind of audit trail will become a default." The provenance design here was
+The NeurIPS 2026 PPT policy now requires, of flagged submissions appealing
+their desk rejection, a pre-AI, post-AI and final version-history audit trail,
+and states the expectation directly: "We expect that in future years this kind
+of audit trail will become a default." The provenance design here was
 not built to the requirement, and satisfies it.
 
 The more useful finding is USENIX's natural experiment. Artifact deposition was

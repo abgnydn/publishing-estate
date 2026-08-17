@@ -99,8 +99,10 @@ A verdict is admissible only when anchored to an external artifact: a primary
 source fetched and quoted, a failing check, a contradiction with a named
 file:line. The literature's sharpest control (Stechly, arXiv 2310.12397):
 self-critique made models WORSE (16%->1%) while an external verifier hit ~40% --
-and a RANDOMIZED verifier also hit ~40%. The loop is the value; unanchored
-judgment is noise. If you cannot anchor, the verdict is CANNOT-VERIFY -- and
+and with the sound verifier still deciding, randomized and even fabricated
+feedback reached the same ~40%: the critique content is irrelevant, the
+external check carries the value. If you cannot anchor, the verdict is
+CANNOT-VERIFY -- and
 CANNOT-VERIFY is a routing signal (say what evidence would settle it), not just
 a rejection. Set `"anchored": true` in your ledger entry only when the note
 cites the artifact.

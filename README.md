@@ -15,7 +15,7 @@ a specific failure, and each one is traceable to a row in
 Three generations of one generated data file were live at the same time. Every
 site rendered its sibling-project cards from a copy of that file, baked in at
 deploy time and never regenerated. One site said the flagship runtime ran at
-~40 tok/s and was "22% BEHIND WebLLM". The flagship's own copy said 69.6 tok/s
+~40 tok/s and was "22% behind WebLLM". The flagship's own copy said 69.6 tok/s
 and "+16%". The benchmark artifact said 69.55 and +16.0%. The sign of the
 project's founding comparison was inverted on a live page and had been for
 weeks.
@@ -35,6 +35,12 @@ measured here. A figure from this estate's own record is traceable to a row in
 [`docs/incidents.md`](docs/incidents.md). The standing rule is to prefer
 deleting a number to updating it, and this file follows it everywhere the
 number is not itself the claim being made.
+
+**Requirements.** `node` (developed and tested on v24; plain ESM, no
+dependencies), `jq` and `shasum` for the gate and its test suite, `bash`.
+Four `produced_by` commands in the example registry point at the author's
+checkouts and live endpoints; on any other machine they report UNREACHABLE,
+which the checker treats as unverified, never as agreement.
 
 ---
 
@@ -415,8 +421,10 @@ The sharpest result here is Stechly et al. (arXiv 2310.12397). Self-critique
 made models worse, from 16% to 1%, while an external verifier reached roughly
 40%. The control is what matters: a *randomized* verifier also reached roughly
 40%. The verification loop carries the value, and unanchored self-judgement is
-noise. Guey et al. (arXiv 2606.20093) is the complement: LLM self-preference
-vanishes under a deterministic verifier.
+noise. Guey and Bougault (arXiv 2606.20093) is the complement: with validity
+decided by a deterministic verifier, self-preference is weak or absent — no
+detectable effect, with anything under roughly 13 points not excluded at their
+sample size.
 
 This is why the `reproducer` lens exists as a distinct role rather than an
 instruction inside a general reviewer, why its ledger entries are anchored by
@@ -453,8 +461,8 @@ audit on the guards themselves, periodically.
 A tally counts something that grows — tests, files, runs, devices — and is
 stale the next commit. A measurement is frozen once made, given a date, a
 machine and a protocol. Treating them as one kind is what produced a shader
-count published simultaneously as 18, 27, 42 and 55, only one of which was
-produced by running anything. A tally may appear only on the surface that
+count published simultaneously as 18, 27, 42 and 55 — none of them produced by
+running anything — beside the one count that was. A tally may appear only on the surface that
 generates it. A measurement may be republished, and only where it is the claim
 the surface exists to make. Crosslink cards, footers, taglines, nav links and
 repo descriptions are decorative surfaces and carry zero numbers. A sentence
@@ -462,10 +470,11 @@ without a number cannot go stale.
 
 ### The audit trail is arriving as an obligation, and executing it is the moat
 
-The NeurIPS 2026 PPT policy now requires a pre-AI, post-AI and final
-version-history audit trail, and states the expectation directly: "we expect
-that in future years this kind of audit trail will become a default." The
-provenance design here predates the requirement and satisfies it.
+The NeurIPS 2026 PPT policy now requires, of submissions flagged for
+significant AI involvement, a pre-AI, post-AI and final version-history audit
+trail, and states the expectation directly: "[W]e expect that in future years
+this kind of audit trail will become a default." The provenance design here was
+not built to the requirement, and satisfies it.
 
 The more useful finding is USENIX's natural experiment. Artifact deposition was
 mandated; reproduction stayed flat, and roughly half of deposited artifacts
@@ -486,7 +495,9 @@ canonicalization before matching — CARE-style approaches report 85.6% F1 at
 2.3ms — and an egress boundary. Neither is implemented here.
 
 **The lenses share a model family.** Four lenses from one family carry roughly
-1.7 effective votes. The anchored-SAFE requirement mitigates this and does not
+1.7 effective votes — a derived estimate, applying the Kish effective-sample
+formula to the error correlations reported in arXiv 2605.29800, not a figure
+that paper states. The anchored-SAFE requirement mitigates this and does not
 remove it. Evidence-disjoint lens plumbing and a cross-family reproducer are
 identified as the next improvements and are not built. Identical evidence
 supplied to multiple judges produces herding (arXiv 2607.01661), and roughly
@@ -573,7 +584,8 @@ almost nothing here failed at authoring time.
 
 Release of this repository is gated on the system it describes. The published
 README carries at least two SAFE ledger entries for its exact sha256, at least
-one of them anchored to executed output, recorded before the repository became
+one of them anchored — a verdict whose note cites executed output, a fetched
+primary source, or file:line evidence — recorded before the repository became
 public. Editing this file after that point revokes those entries, which is the
 behaviour the gate exists to have.
 

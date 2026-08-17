@@ -115,7 +115,7 @@
       "value": 51,
       "unit": "files",
       "scope": "hand-written .wgsl files in src/compiler/shaders, excluding generated int4-matmul variants",
-      "produced_by": "ls ~/dev/zero-tvm/src/compiler/shaders/*.wgsl | wc -l",
+      "produced_by": "cd ~/dev/zero-tvm/src/compiler/shaders && ls *.wgsl | wc -l",
       "cost": "cheap",
       "measured_at": "2026-08-15",
       "status": "protocol",

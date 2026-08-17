@@ -27,12 +27,14 @@ stopped being correct, on a surface nobody owned.
 
 ### A note on the numbers in this file
 
-The counts below are tallies. Each one is quoted beside the command that
-regenerates it, and every command in this README was run against this
-repository before the README was written. Figures attributed to published
-research carry their arXiv identifier and are cited, not measured here. The
-estate's own standing rule is to prefer deleting a number to updating it, and
-this file follows it everywhere the number is not the claim being made.
+Three kinds of number appear below. A count produced by a command in this
+repository is quoted beside that command, and every command in this README was
+run against this repository before the README was written. A figure attributed
+to published research carries its arXiv identifier and is cited rather than
+measured here. A figure from this estate's own record is traceable to a row in
+[`docs/incidents.md`](docs/incidents.md). The standing rule is to prefer
+deleting a number to updating it, and this file follows it everywhere the
+number is not itself the claim being made.
 
 ---
 
@@ -95,7 +97,8 @@ then moved from 50 to 51 the following day.
 
 ### Graded severity
 
-Severity is graded by surface, not by rule. A stat tile is short, always
+Severity follows the surface a number lands on rather than the rule it breaks.
+A stat tile is short, always
 redesignable, and read as a claim, so a literal number there is an ERROR. A
 tagline mixes metrics with product names, and prose legitimately carries model
 specifications, physics scales and citation years, so a literal number in
@@ -251,9 +254,9 @@ real build and watching it fail, 34 minutes after the comment was posted.
 Everyone subscribed to the thread had already been emailed, and an edit does
 not unsend an email.
 
-Two things follow. Verification has to land before the publish, not around it.
-And a verdict that exists only in a transcript has never blocked anything, so
-the verdicts are written to a ledger and a hook reads the ledger.
+Two things follow. Verification has to land before the publish rather than
+around it. And a verdict that exists only in a transcript has never blocked
+anything, so the verdicts are written to a ledger and a hook reads the ledger.
 
 ```mermaid
 flowchart TD
@@ -321,7 +324,7 @@ and a date on every rule, because the same rules previously lived as prose
 inside one agent definition and at six platforms that becomes six drifting
 copies of one checklist.
 
-**Verification depth follows reversibility, not platform.** `platforms.json`
+**Verification depth follows reversibility rather than platform.** `platforms.json`
 carries five tiers. `permanent` (DOIs, npm versions, git tags) takes all four
 lenses and a human read. `notifies` (GitHub issues, PRs, comments) takes the
 refuter and the reproducer. `moderated` (Reddit, HuggingFace) takes the
@@ -348,10 +351,14 @@ PASS  2 SAFE, 1 anchored -> pass                           PASSLED
 PASS  DO-NOT-POST vetoes 2 SAFEs                           DENY
 PASS  edited file -> stale hash blocks                     DENY
 ── ledger scale: 600 entries under the timeout ──
-600-entry ledger scan wall time: 0s (must be well under 10)
+600-entry ledger scan wall time: <seconds> (must be well under 10)
 
 RESULT: 32 passed, 0 failed
 ```
+
+The wall time is the one line above that is a measurement rather than a
+verdict, so it is shown as a placeholder. Observed at 0 to 1 second on an
+M2 Max, against a bound of 10.
 
 The last block is a regression test for a failure worth stating plainly. The
 ledger scan once spawned three processes per entry, and past roughly 580
@@ -455,7 +462,7 @@ without a number cannot go stale.
 
 ### The audit trail is arriving as an obligation, and executing it is the moat
 
-The NeurIPS 2026 Paper–Program Track now requires a pre-AI, post-AI and final
+The NeurIPS 2026 PPT policy now requires a pre-AI, post-AI and final
 version-history audit trail, and states the expectation directly: "we expect
 that in future years this kind of audit trail will become a default." The
 provenance design here predates the requirement and satisfies it.
@@ -519,15 +526,16 @@ flattering direction.
 
 ### Minimal path
 
-Two files, and it is useful the day you install it.
+The registry and the render gate. It is useful the day you install it.
 
 1. Copy `facts/facts.json` and `facts/check-facts.mjs`. Empty the `facts` array
    and add one entry for every number currently on any surface you own. Set the
    status honestly. Most will be `unbacked` on the first pass, and that is the
    finding.
-2. Copy `render/build-sites.mjs` and adapt the surface regexes at the top of
-   the file to your own source document's shape. Replace every literal number
-   in that document with a `{{fact:id}}` placeholder.
+2. Copy `render/build-sites.mjs` and adapt `STAT_CONTEXT`, `TAGLINE_CONTEXT`
+   and the label and prose pattern beside them to your own source document's
+   shape. Replace every literal number in that document with a `{{fact:id}}`
+   placeholder.
 3. Run `node render/build-sites.mjs --check` in CI or in a pre-commit hook.
 
 ### Full path

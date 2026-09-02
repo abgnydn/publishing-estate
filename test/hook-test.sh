@@ -3,10 +3,16 @@
 # Trigger strings are assembled from fragments so this file itself never
 # contains a live trigger for the hook that gates the shell running it.
 #
-# 32 cases. The first block is the audit corpus: every string in it was a
-# working bypass of an earlier version of the gate, found by fuzzing the hook
-# itself. Those are regression tests now. The rest prove the legitimate flows
-# still work, that the MCP side door is shut, and that the ledger behaves.
+# The first block is the audit corpus: every string in it was a working bypass
+# of an earlier version of the gate. The first fourteen came from fuzzing the
+# hook; the rest came from reading the matchers afterwards, which found the
+# HuggingFace forms and the argument-order hole. All are regression tests now.
+# The remaining blocks prove the legitimate flows still work, that the MCP side
+# door is shut, that the ledger behaves, and that two spellings of one lens
+# cannot pass for two reviewers.
+#
+# Every case was written fail-first and each was confirmed to fail against the
+# version of the hook that preceded it.
 #
 # The suite runs against a throwaway ledger directory, so it never touches the
 # real one and can be run on a machine that has no ledger at all.
@@ -24,6 +30,7 @@ LED="$PUBLISH_LEDGER_DIR"
 V="CLAUDE_PUBLISH_""VERIFIED=1"
 A="CLAUDE_PUBLISH_""ARTIFACT"
 GH="g""h"
+HF="h""f"
 WR="wran""gler"
 NPM="np""m"
 
@@ -64,6 +71,20 @@ run "wrangler versions deploy"              DENY Bash "npx $WR versions deploy"
 run "IFS obfuscation"                       DENY Bash "$GH\${IFS}issue\${IFS}comment 1 --body hi"
 run "verified but NO artifact (old warn)"   DENY Bash "$V $GH issue comment 1 --body hi"
 run "gh repo archive now gated"             DENY Bash "$GH repo archive o/r -y"
+# Only the --create-pr form and the old CLI were matched, so the reviewable
+# shape was gated and a direct write to main was not. The git-push form that
+# should have covered it carried a doubled backslash inside a single-quoted
+# regex, so it matched a literal backslash and never fired.
+run "hf upload straight to main"            DENY Bash "$HF upload owner/model ./dist"
+run "hf repo create"                        DENY Bash "$HF repo create owner/new-model"
+run "huggingface-cli repo create"           DENY Bash "huggingface-cli repo create owner/new-model"
+run "git push to a HuggingFace Space"       DENY Bash "git push https://huggingface.co/spaces/o/r main"
+run "git push to hf.co short host"          DENY Bash "git push -q --force https://hf.co/o/r main"
+# A write flag may sit on either side of the url. The matchers required it to
+# come after the host, so the same command written the other way round passed.
+run "curl HF write, flag before the host"   DENY Bash "curl -X POST -d name=x https://huggingface.co/api/repos/create"
+run "curl HF write, flag after the host"    DENY Bash "curl https://huggingface.co/api/repos/create -d name=x"
+run "curl github write, flag before host"   DENY Bash "curl -X POST -d body=hi https://api.github.com/repos/o/r/issues/1/comments"
 
 echo "── MCP side door ──"
 run "mcp add_issue_comment"                 DENY  mcp__github__add_issue_comment ""
@@ -79,6 +100,7 @@ run "gh api markdown endpoint (real use)"   ALLOW Bash "$GH api /markdown -f tex
 run "gh api rate_limit"                     ALLOW Bash "$GH api /rate_limit --jq .rate"
 run "git status"                            ALLOW Bash "git status"
 run "plain git push (by design ungated)"    ALLOW Bash "git push -q"
+run "hf download is a read"                 ALLOW Bash "$HF download owner/model --local-dir ./m"
 run "unverified publish blocks"             DENY Bash "$GH issue comment 1 --body hi"
 
 echo "── ledger flow ──"
@@ -94,6 +116,25 @@ run "DO-NOT-POST vetoes 2 SAFEs"            DENY Bash "$V $A=$ART $GH issue comm
 rm -f "$LED/$SHA-recipient.json"
 echo "edited after approval" >> "$ART"
 run "edited file -> stale hash blocks"      DENY Bash "$V $A=$ART $GH issue comment 1 --body hi"
+
+echo "── lens-name normalisation: a typo is not a second reviewer ──"
+# The quorum counts DISTINCT lens names. A ledger holding both "claims" and
+# "claim-auditor" cleared a two-reviewer bar with one review.
+ART2="$TMP/gate-test-artifact-2.md"
+echo "second test artifact $(date +%s)" > "$ART2"
+SHA2=$(shasum -a 256 "$ART2" | awk '{print $1}')
+mk2() { jq -n --arg s "$SHA2" --arg p "$ART2" --arg l "$1" --arg v "$2" --argjson a "${3:-false}" \
+  '{artifact_sha256:$s,artifact_path:$p,lens:$l,verdict:$v,anchored:$a,date:"t",note:"t"}' > "$LED/$SHA2-$1.json"; }
+mk2 claims SAFE true
+mk2 claim-auditor SAFE
+run "two spellings of one lens are one reviewer" DENY Bash "$V $A=$ART2 $GH issue comment 1 --body hi"
+mk2 CLAIM_AUDITOR SAFE
+run "case and underscores are the same lens"     DENY Bash "$V $A=$ART2 $GH issue comment 1 --body hi"
+# Normalisation must not lose a real reviewer: an alias still counts as the
+# canonical lens it names.
+mk2 reproduction SAFE
+run "an alias still counts as its canonical lens" PASSLED Bash "$V $A=$ART2 $GH issue comment 1 --body hi"
+rm -f "$LED/$SHA2-"*.json
 
 echo "── ledger scale: 600 entries under the timeout ──"
 # A timed-out hook does not block. The scan was O(3n) subprocesses and would

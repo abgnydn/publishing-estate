@@ -33,6 +33,19 @@
 #   - the stale-hash scan spawned ~3 processes per ledger file; past ~580
 #     files it would exceed the hook timeout, and a timed-out hook does not
 #     block — the gate would silently disable itself as the ledger grew.
+#
+# Hardened again 2026-08, after two more holes were found by reading the
+# matchers rather than by fuzzing them:
+#   - HuggingFace was gated only in its --create-pr form and through the old
+#     CLI, so the reviewable shape was blocked and a direct write to main was
+#     not. The git-push form that would have covered the gap carried a `\\.`
+#     inside a single-quoted regex, which matches a literal backslash and
+#     therefore never fired at all;
+#   - the curl matchers required the write flag to appear AFTER the host, so
+#     the same command with its arguments in the other order passed;
+#   - the quorum counted distinct lens NAMES, so two spellings of one lens
+#     ("claims" and "claim-auditor") satisfied a two-reviewer rule with one
+#     review. Names are normalised before anything is counted.
 # Known residual (documented, not solved here): shell obfuscation is a
 # denylist problem and denylists are fragile; the durable answer is
 # canonicalization and an egress boundary. See docs/incidents.md and the
@@ -130,10 +143,26 @@ check 'gh[[:space:]]+api[[:space:]].*(-X|--method)[[:space:]]+(POST|PATCH|PUT|DE
 # needed. Any field/input flag makes an api call a write.
 check 'gh[[:space:]]+api[[:space:]].*[[:space:]](-f|-F|--field|--raw-field|--input)([[:space:]]|=)' 'gh api write (auto-POST)'
 check 'gh[[:space:]]+alias[[:space:]]+set'                                       'gh alias set (matcher evasion shape)'
-check 'curl[[:space:]].*api\.github\.com.*(-X[[:space:]]*(POST|PATCH|PUT|DELETE)|--data|[[:space:]]-d[[:space:]]|[[:space:]]-F[[:space:]])' 'curl github write'
+# A write flag may sit on either side of the url. The first version required
+# the flag to come AFTER the host, so `curl -X POST -d body=hi https://api...`
+# was a bypass and `curl https://api... -d body=hi` was not, which is the same
+# command written the other way round.
+curl_write='(-X[[:space:]]*(POST|PATCH|PUT|DELETE)|--data|[[:space:]]-d[[:space:]]|[[:space:]]-F[[:space:]])'
+check "curl[[:space:]].*(api\.github\.com.*${curl_write}|${curl_write}.*api\.github\.com)" 'curl github write'
 check 'git[[:space:]]+push.*gh-pages'                                            'git push gh-pages'
-check 'hf[[:space:]]+upload.*--create-pr'                                        'hf upload --create-pr'
-check 'huggingface-cli[[:space:]]+upload'                                        'huggingface-cli upload'
+
+# HuggingFace was almost unguarded here. Only the --create-pr form and the old
+# CLI were matched, so the SAFER shape — a reviewable pull request — was gated
+# while a direct write to main was not, and a git push to a Space repo was not
+# covered at all. The push matcher additionally has to be written with a SINGLE
+# backslash: inside single quotes bash performs no escape processing, so `\\.`
+# reaches grep as backslash-backslash-dot and matches a literal backslash. That
+# typo is why the push form never fired.
+check 'hf[[:space:]]+upload'                                                     'hf upload'
+check 'hf[[:space:]]+(repo|auth)[[:space:]]+(create|delete|move)'                'hf repo write'
+check 'huggingface-cli[[:space:]]+(upload|repo)'                                 'huggingface-cli write'
+check 'git[[:space:]]+push.*(huggingface\.co|hf\.co)'                            'git push to HuggingFace'
+check "curl[[:space:]].*((huggingface\.co|hf\.co).*${curl_write}|${curl_write}.*(huggingface\.co|hf\.co))" 'curl HuggingFace write'
 check '(npm|pnpm|yarn)[[:space:]]+publish'                                       'package publish'
 check 'wrangler[[:space:]]+(pages[[:space:]]+)?(deploy|publish|versions[[:space:]]+deploy)' 'wrangler deploy'
 check 'vercel[[:space:]].*--prod'                                                'vercel --prod'
@@ -214,6 +243,17 @@ for f in sorted(d.glob("*.json")):
     except Exception:
         skipped.append(f"{f.name}: not valid JSON"); continue
     esha, lens, verdict = e.get("artifact_sha256"), e.get("lens"), e.get("verdict")
+    # Two spellings of one lens are not two reviewers. The quorum counts
+    # DISTINCT names, so `claims` beside `claim-auditor` cleared a two-reviewer
+    # bar on one review. Normalise before anything is counted. Keep this map in
+    # step with CANONICAL/ALIASES in checkers/check-lenses.mjs, which reports
+    # the ledger entries that make it necessary.
+    if lens:
+        lens = lens.strip().lower().replace("_", "-").replace(" ", "-")
+        lens = {"rendering-and-mechanics": "rendering",
+                "claims": "claim-auditor",
+                "claim-audit": "claim-auditor",
+                "reproduction": "reproducer"}.get(lens, lens)
     if f.name.startswith(sha + "-"):
         if esha != sha:
             skipped.append(f"{f.name}: artifact_sha256 does not match its filename"); continue

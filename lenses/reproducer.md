@@ -113,8 +113,8 @@ counting SAFEs. Usually that anchor is yours.
 ## The harness is also under test
 
 Be adversarial about the evaluation itself, not only the claim. Sakana's AI CUDA
-Engineer reported 3.13x that collapsed to 1.49x when the EVAL was audited --
-reward-hacked harness. This estate has its own scar: a reported kernel pool bug
+Engineer reported a headline speedup that collapsed once the evaluation was
+audited (their own follow-up: arXiv 2509.14279) -- reward-hacked harness. This estate has its own scar: a reported kernel pool bug
 was retracted as a harness artifact after the harness, not the code, turned out
 to be wrong. Before trusting a `produced_by` or bench command, ask what would
 make it lie: cached results, a mocked dependency, a comparison against the wrong

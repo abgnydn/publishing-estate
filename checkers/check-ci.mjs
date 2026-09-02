@@ -231,6 +231,16 @@ function git(dir, a) {
   catch { return null; }
 }
 
+// A checkout whose last commit cannot be read (missing git binary, broken
+// repo) must say so: scoring freshness as "does not apply" would make the
+// score IMPROVE when a tool goes missing. Exported so the selftest can plant
+// the case without removing git from PATH.
+export function gitSilence(name, lastCommit) {
+  if (lastCommit !== null) return null;
+  return `UNREACHABLE    ${String(name).padEnd(22)} git did not answer in the checkout — `
+    + 'freshness is unverified, not not-applicable';
+}
+
 // --------------------------------------------------------------------- main
 
 // Each rule returns true, false, or null for "does not apply here". A repo with
@@ -267,6 +277,8 @@ async function main() {
 
     const a = analyseRepo(dir);
     const lastCommit = git(dir, ['log', '-1', '--format=%cI']);
+    const silence = gitSilence(r.name, lastCommit);
+    if (silence) console.log(silence);
     const row = {
       name: r.name,
       workflows: a.workflows.length,
@@ -493,6 +505,10 @@ jobs:
   ck('and no unreadable files either — there was nothing to read', 0, absent.unreadable.length);
   ck('a missing checkout is never credited with tests', false, absent.hasTests);
   ck('and never credited with hooks', false, absent.lefthook);
+  ck('a git that cannot answer is UNREACHABLE, not not-applicable', true,
+    gitSilence('proj', null) !== null);
+  ck('a git that answered produces no unreachable line', null,
+    gitSilence('proj', '2026-01-01T00:00:00+00:00'));
   ck('a missing config is fatal, not an empty report', true,
     threw(() => configFrom(['--config', '/nonexistent/estate.json'], here)));
   ck('a config with zero repos is fatal', true, threw(() => section({ repos: [] }, 'repos')));

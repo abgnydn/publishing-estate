@@ -38,7 +38,7 @@
 // Exit 0 clean, 1 findings, 2 broken or misconfigured. Reads only; writes
 // nothing.
 
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -182,13 +182,30 @@ export function ruleVolatile(text, fileName, repos) {
         const stated = Number(m[1].replace(/,/g, ''));
         const repo = repoFor(fileName, line, repos);
         if (!repo?.dir || !existsSync(join(repo.dir, '.git'))) continue;
-        let actual;
+        let raw;
         if (v.kind === 'past-tag') {
           const tag = m[2].replace(/[^\w.-]/g, '');
-          actual = Number(git(repo.dir, ['rev-list', '--count', `${tag}..HEAD`]) ?? NaN);
+          raw = git(repo.dir, ['rev-list', '--count', `${tag}..HEAD`]);
         } else {
-          actual = Number(git(repo.dir, ['rev-list', '--count', '@{u}..HEAD']) ?? NaN);
+          raw = git(repo.dir, ['rev-list', '--count', '@{u}..HEAD']);
         }
+        if (raw === null) {
+          // git did not answer — missing binary, broken checkout, no upstream.
+          // A claim that cannot be checked is unverified, never confirmed, and
+          // dropping it silently makes a broken sweep look clean.
+          const key = `${repo.name}|unreachable`;
+          if (seen.has(key)) continue;
+          seen.add(key);
+          hits.push({
+            kind: 'GIT-UNREACHABLE',
+            fact: repo.name,
+            value: stated,
+            actual: null,
+            at: { context: line.trim().slice(0, 200), line: 0 },
+          });
+          continue;
+        }
+        const actual = Number(raw);
         if (!Number.isFinite(actual) || actual === stated) continue;
         const key = `${repo.name}|${v.kind}|${stated}|${line.trim()}`;
         if (seen.has(key)) continue;
@@ -252,8 +269,14 @@ function main() {
       ...ruleVolatile(text, name, repos),
     ];
     for (const h of hits) {
-      findings += 1;
       const where = `${name}${h.at.line ? `:${h.at.line}` : ''}`;
+      if (h.kind === 'GIT-UNREACHABLE') {
+        // Not a finding and not a pass: the claim stands unverified.
+        console.log(`UNREACHABLE  ${where.padEnd(34)} git did not answer for ${h.fact} — the volatile claim is unverified, not confirmed`);
+        console.log(`             …${h.at.context}…`);
+        continue;
+      }
+      findings += 1;
       if (h.kind === 'RETIRED') {
         console.log(`RETIRED      ${where.padEnd(34)} carries ${h.value}, withdrawn as ${h.fact}`);
       } else if (h.kind === 'FACT-DRIFT') {
@@ -347,6 +370,24 @@ function selftest() {
     ruleVolatile('zero-tvm is 9 commits unpushed.', 'zero-tvm.md', [{ name: 'zero-tvm', dir: '/nonexistent' }]).length);
   ck('the repo join reads the filename as well as the line', 'zero-tvm',
     repoFor('zero-tvm.md', 'nine commits unpushed', [{ name: 'zero-tvm' }])?.name);
+
+  // A checkout git cannot answer for (broken repo, missing binary, no
+  // upstream) must surface as UNREACHABLE, never as silent agreement. A plain
+  // file named .git passes the existence check and makes every git call fail.
+  {
+    const tmp = join(process.env.TMPDIR || '/tmp', `check-memory-selftest-${process.pid}`);
+    mkdirSync(tmp, { recursive: true });
+    try {
+      writeFileSync(join(tmp, '.git'), 'not a repository');
+      const h = ruleVolatile('proj is 9 commits unpushed.', 'proj.md', [{ name: 'proj', dir: tmp }]);
+      ck('a git that cannot answer is UNREACHABLE, not silence', 'GIT-UNREACHABLE', h[0]?.kind);
+      ck('and it is reported once per repo, not per sentence', 1,
+        ruleVolatile('proj is 9 commits unpushed. proj is 4 commits unpushed.', 'proj.md',
+          [{ name: 'proj', dir: tmp }]).length);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  }
 
   // THE FAULT CASE.
   ck('a missing config is fatal, not an empty sweep', true,

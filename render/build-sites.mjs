@@ -25,10 +25,10 @@
 // Severity is graded by SURFACE, not by rule. A stat tile is short, always
 // redesignable, and read as a claim, so a literal number there is an error. A
 // tagline mixes metrics with product names, so it is a warning. Prose carries
-// model specs, physics scales and citation years, so it is a warning too. The
-// only other public implementation of an unbacked-number gate was disabled by
-// its own author for noise. A guard that always fires gets bypassed; grading by
-// surface is what makes this one survivable.
+// model specs, physics scales and citation years, so it is a warning too. A
+// comparable public gate, found in the author's unpublished survey of the
+// space, was disabled by its own author for noise. A guard that always fires
+// gets bypassed; grading by surface is what makes this one survivable.
 
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join, resolve as resolvePath } from 'node:path';

@@ -184,10 +184,11 @@ ok   registered value is excused
 ok   a config with zero surfaces is fatal
 ```
 
-The first line here is the positive control and the last is the fault case.
-Every selftest in this directory contains both: at least one case whose only job
-is to prove the checker can still see a planted defect, and a closing block in
-which broken input hard-fails instead of sweeping.
+The block opens with a planted-defect case and closes with the fault case; the
+named positive control (`positive control finds a known token`) sits between
+them. Every selftest in this directory contains all three: at least one case
+whose only job is to prove the checker can still see a planted defect, and a
+closing block in which broken config input hard-fails instead of sweeping.
 
 Then the shipped example, which sweeps the two fixture surfaces. Context
 strings are elided at both ends by the checker itself:

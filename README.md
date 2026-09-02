@@ -4,7 +4,8 @@ A governance system for one person publishing technical claims across many
 surfaces. It has two invariants. A number reaches a stat tile in rendered site
 data only through a registry id — in a tagline, a stat label or a short
 description a literal is reported rather than blocked, other rendered fields
-are not examined, and prose, this file included, is governed by the note on
+are not graded for literal numbers (a `{{fact:id}}` anywhere is still resolved
+and status-checked), and prose, this file included, is governed by the note on
 the numbers below — and nothing irreversible ships on one context's judgement. The
 mechanisms that enforce them are a fact registry with a render gate, a fleet of
 checkers that ask what is true right now, and a set of adversarial lenses whose
@@ -58,8 +59,9 @@ FACT-DRIFT and exits 1, which is the checker working.
 `facts/facts.json` is the single source for every number in a stat tile, and
 `render/build-sites.mjs` is the only path from the registry to the rendered
 data — it errors on a literal in a stat tile and reports one in a tagline, a
-stat label or a short description; other rendered fields are not examined.
-There is no path for a hand-typed number into a stat tile.
+stat label or a short description; other rendered fields are not graded for
+literal numbers, though a `{{fact:id}}` anywhere is still resolved and its
+status checked. There is no path for a hand-typed number into a stat tile.
 
 ```mermaid
 flowchart TD
@@ -128,8 +130,9 @@ on.
 
 ### Running the example
 
-The shipped registry is the author's own, trimmed to the entries that
-demonstrate each shape.
+The shipped registry is a dated trim of the author's own, taken 2026-08; the
+live registry has since retired one of these ids (`zerotvm.wgsl_files`), which
+is kept here as the demonstration fact for drift.
 
 ```
 $ node facts/check-facts.mjs
@@ -148,6 +151,9 @@ $ node facts/check-facts.mjs --verify-cheap
 self-check passed; 4 cheap facts re-run against their produced_by
 ```
 
+Exit 1 today on the author's machine: the elided lines are FACT-DRIFT
+findings — a live counter beyond its declared band, and the retired
+checkout-local count — which is the checker working, as section 2 describes.
 Several `produced_by` commands point at the author's own checkouts and will
 report UNREACHABLE elsewhere, which is the correct answer. `example.lens_files`
 is repo-local and re-runs green on any clone, so the pass always has something
@@ -581,8 +587,10 @@ without a number cannot go stale.
 
 ### The audit trail is arriving as an obligation, and executing it is the durable part
 
-The NeurIPS 2026 PPT policy now requires, of flagged submissions given the
-opportunity to appeal, a pre-AI, post-AI and final version-history audit trail,
+The NeurIPS 2026 Position Paper Track policy
+([blog.neurips.cc, 2026-06-02](https://blog.neurips.cc/2026/06/02/ai-generated-papers-in-the-neurips-2026-position-paper-track/))
+now requires, of flagged submissions given the opportunity to appeal, a pre-AI,
+post-AI and final version-history audit trail,
 and states the expectation directly: "We expect that in future years this kind
 of audit trail will become a default." The provenance design here was not
 built to the requirement; whether it satisfies the policy's three checkpoints

@@ -330,8 +330,8 @@ ${standing_rule}"
 fi
 
 # Quorum lesson from the 2026-08 verification survey: four same-family lenses
-# carry ~1.7 effective votes (a Kish-formula derivation from 2605.29800, not a
-# figure that paper states), and a SAFE is absence-of-evidence from a lens
+# carry far fewer than four independent votes (correlations: arXiv 2605.29800),
+# and a SAFE is absence-of-evidence from a lens
 # whose measured defect recall is poor. Counting SAFEs is therefore not enough:
 # at least one must be ANCHORED -- a verdict whose note cites execution output,
 # a primary source, or file:line evidence ("anchored": true in the entry).

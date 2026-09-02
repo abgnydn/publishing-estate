@@ -107,10 +107,10 @@ export function quorumSplit(group, required = 2) {
   return { raw: [...raw], norm: [...norm], decisive: raw.size >= required && norm.size < required };
 }
 
-function ledgerDir() {
-  const explicit = flag(args, '--ledger');
+function ledgerDir(argv = args) {
+  const explicit = flag(argv, '--ledger');
   if (explicit) return explicit;
-  const cfg = flag(args, '--config');
+  const cfg = flag(argv, '--config');
   if (cfg) {
     const doc = readConfig(cfg);
     const p = configPath(doc, doc.ledger);
@@ -258,6 +258,23 @@ function selftest() {
     ck('and the readable entry still comes through', 1, r.entries.length);
   } finally {
     rmSync(tmp, { recursive: true, force: true });
+  }
+
+  // THE CONFIG FAULT CASE, like every other checker in this directory: broken
+  // config input stops the run rather than sweeping against nothing. These go
+  // through ledgerDir() itself, not a re-implementation of it.
+  const threw = (fn) => { try { fn(); return false; } catch { return true; } };
+  ck('a missing config is fatal, not an empty sweep', true,
+    threw(() => ledgerDir(['--config', '/nonexistent/estate.json'])));
+  const cfgTmp = join(process.env.TMPDIR || '/tmp', `check-lenses-cfg-${process.pid}.json`);
+  try {
+    writeFileSync(cfgTmp, JSON.stringify({ ledger: null }));
+    ck('a config naming no ledger is fatal, not a fallback', true,
+      threw(() => ledgerDir(['--config', cfgTmp])));
+    ck('but an explicit --ledger still wins over the config', '/tmp/x',
+      ledgerDir(['--config', cfgTmp, '--ledger', '/tmp/x']));
+  } finally {
+    rmSync(cfgTmp, { force: true });
   }
 
   return fail;

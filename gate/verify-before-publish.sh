@@ -246,8 +246,8 @@ for f in sorted(d.glob("*.json")):
     # Two spellings of one lens are not two reviewers. The quorum counts
     # DISTINCT names, so `claims` beside `claim-auditor` cleared a two-reviewer
     # bar on one review. Normalise before anything is counted. Keep this map in
-    # step with CANONICAL/ALIASES in checkers/check-lenses.mjs, which reports
-    # the ledger entries that make it necessary.
+    # step with CANONICAL/ALIASES in gate/lens-names.mjs, the other of the two
+    # deliberate copies; gate/dry-run.mjs --selftest fails if they disagree.
     if lens:
         lens = lens.strip().lower().replace("_", "-").replace(" ", "-")
         lens = {"rendering-and-mechanics": "rendering",

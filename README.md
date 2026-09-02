@@ -1,8 +1,10 @@
 # publishing-estate
 
 A governance system for one person publishing technical claims across many
-surfaces. It has two invariants. A number reaches a public surface only through
-a registry id, and nothing irreversible ships on one context's judgement. The
+surfaces. It has two invariants. A number reaches rendered site data only
+through a registry id — prose, this file included, is governed by the note on
+the numbers below, not by the render gate — and nothing irreversible ships on
+one context's judgement. The
 mechanisms that enforce them are a fact registry with a render gate, a fleet of
 checkers that ask what is true right now, and a set of adversarial lenses whose
 verdicts are written to a sha256-bound ledger that a PreToolUse hook reads
@@ -21,9 +23,10 @@ project's founding comparison was inverted on a live page and had been for
 weeks.
 
 Nothing in that failure happened at authoring time. Each of the three copies
-was correct when it was written. The system was built and battle-tested between
-2026-08-14 and 2026-08-17 against that class of defect: a correct thing that
-stopped being correct, on a surface nobody owned.
+was correct when it was written. The system was built and battle-tested
+beginning 2026-08-14, in the course of publishing real work, against that class
+of defect: a correct thing that stopped being correct, on a surface nobody
+owned.
 
 ### A note on the numbers in this file
 
@@ -47,9 +50,9 @@ anywhere with network, and is compared inside its declared drift band.
 
 ## 1. The fact registry and the render gate
 
-`facts/facts.json` is the single source for every number that appears on any
-public surface. `render/build-sites.mjs` is the only path from that registry to
-rendered site data. There is no path for a hand-typed number into a stat tile.
+`facts/facts.json` is the single source for every number that appears in
+rendered site data. `render/build-sites.mjs` is the only path from that
+registry to it. There is no path for a hand-typed number into a stat tile.
 
 ```mermaid
 flowchart TD
@@ -109,9 +112,9 @@ A stat tile is short, always
 redesignable, and read as a claim, so a literal number there is an ERROR. A
 tagline mixes metrics with product names, and prose legitimately carries model
 specifications, physics scales and citation years, so a literal number in
-either is a WARNING that is reported and does not block. The only other public
-implementation of an unbacked-number gate was switched off by its own author
-for noise. Grading by surface is what keeps this one turned on.
+either is a WARNING that is reported and does not block. A comparable public
+gate we found was switched off by its own author for noise. Grading by surface
+is what keeps this one turned on.
 
 ### Running the example
 
@@ -181,8 +184,8 @@ changed, and surfaces nothing in the pipeline owns. A build gate protects the
 future. A checker asks what is true right now.
 
 Six checker sources ship in [`checkers/`](checkers/), curated, alongside the
-pattern they converged on. Curated means two things and nothing else.
-**Config-out**: no checker names a domain, an account, a checkout path, a port
+pattern they converged on. Curated means two things.
+**Config-out**: no checker names a surface, an account, a checkout path, a port
 or a schedule, and every one reads
 [`checkers/estate.example.json`](checkers/estate.example.json) or takes the
 paths it needs as arguments. **Surfaces-out**: the shipped example points at
@@ -192,9 +195,13 @@ list of one person's surfaces and one person's retracted values — are describe
 rather than shipped. [`checkers/README.md`](checkers/README.md) has the full
 description and the classes.
 
+The shape, as the live fleet runs it. The runner and its schedule are not in
+this repository, and in the shipped checkers the selftest and its positive
+control run under `--selftest` rather than inside the sweep:
+
 ```mermaid
 flowchart TD
-  C["weekly cron"] --> R["fleet runner"]
+  C["a schedule"] --> R["fleet runner"]
   R --> ST{"selftest, in the same process:<br/>plant a match, a mismatch,<br/>and a command that fails"}
   ST -->|"any planted case misread"| AB["exit 2: refuse to sweep"]
   ST -->|"all three read correctly"| SW["sweep the live surfaces"]
@@ -210,15 +217,18 @@ flowchart TD
 
 ### The rules
 
-**Selftests run before every sweep, in the same process.** The failure being
-defended against is a broken sweep printing a clean sheet on a scheduled run
-nobody is watching. `facts/check-facts.mjs` plants three cases through
-`runAndCompare()`, the same function the real facts go through: a mismatch that
-must read as drift, a match that must read as agreement, and a command that
-exits non-zero and must read as unreachable. If any is misread it prints
-`SELF-CHECK FAILED` and exits 2 without touching a real fact.
+**Selftests ship inside the checker.** The failure being defended against is a
+broken sweep printing a clean sheet on a scheduled run nobody is watching.
+`facts/check-facts.mjs` runs its self-check in the same process as the sweep,
+ahead of `--verify-cheap`: it plants three cases through `runAndCompare()`, the
+same function the real facts go through — a mismatch that must read as drift, a
+match that must read as agreement, and a command that exits non-zero and must
+read as unreachable. If any is misread it prints `SELF-CHECK FAILED` and exits
+2 without touching a real fact. The six checkers in `checkers/` expose the same
+self-check as `--selftest`, a command that runs and exits; wiring it into every
+sweep is open work.
 
-**Every sweep carries a positive control.** A sweep reporting zero findings is
+**A sweep without a positive control is unverified.** A sweep reporting zero findings is
 indistinguishable from a sweep that is broken. This estate shipped one: an
 unquoted shell variable fed the search tool a bogus path, it errored into
 `/dev/null`, and the run reported zero hits for every pattern, including
@@ -268,10 +278,10 @@ FAILED` and exits 2 before reading a real fact.
 Each checker in [`checkers/`](checkers/) carries the same two things: a
 `--selftest` that plants a defect it must see, and a fault case at the end in
 which broken input stops the run. The shipped example config sweeps two fixture
-surfaces that disagree with each other about one quantity, and two of the
-checkers refuse to run against it at all because it configures no accounts and
-no deployed url — which is the fault case doing its job rather than a gap in the
-example.
+surfaces that disagree with each other about one quantity, and three of the
+checkers refuse to run against it at all because it configures no accounts, no
+deployed url and no ledger — which is the fault case doing its job rather than
+a gap in the example.
 
 ---
 
@@ -439,9 +449,10 @@ M2 Max, against a bound of 10.
 The three named audit-corpus lines above were the second round of holes, found
 by reading the matchers rather than by fuzzing them. Only the pull-request form
 of a model-hub upload was gated, so the *safer* shape was blocked and a direct
-write to main was not; the matcher that should have covered the gap carried a
-`\\.` inside a single-quoted bash regex, which matches a literal backslash and
-therefore never fired at all; and the curl matchers required the write flag to
+write to main was not; the matcher that should have covered the gap — in the
+author's installed hook; this repository's own history had no git-push matcher
+at all — carried a `\\.` inside a single-quoted bash regex, which matches a
+literal backslash and therefore never fired; and the curl matchers required the write flag to
 appear after the host, so the same command with its arguments in the other order
 passed.
 
@@ -465,10 +476,12 @@ decides. The entry shape is specified in
 ### The withdrawn lifecycle has no counterpart, and graded severity is why it survives
 
 A per-claim status lifecycle — `protocol`, `single-run`, `provisional`,
-`unbacked`, `withdrawn` — exists in no tool at any level of adoption. A survey
-of the space found three people who independently rebuilt something shaped like
-`facts.json` during 2026, all three at zero adoption. The one who also built an
-unbacked-number gate disabled it, for noise.
+`unbacked`, `withdrawn` — is not something we found in any tool with adoption.
+The survey behind that sentence is the author's own and is not published, so
+treat it as an unchecked impression rather than a result. What it did turn up:
+a handful of people independently rebuilding something shaped like `facts.json`
+during 2026, none with adoption, and one who also built an unbacked-number gate
+and disabled it, for noise.
 
 That last data point set the design. A guard that always fires gets bypassed,
 and a bypassed guard is worse than none because it leaves the belief that a
@@ -515,8 +528,9 @@ estate's own record. Every defect that survived multiple reading passes was
 caught by running something.
 
 The reproducer is additionally instructed to be adversarial about its own
-harness. Sakana's AI CUDA Engineer reported a 3.13x speedup that collapsed to
-1.49x once the evaluation was audited. This estate has a matching scar: a
+harness. Sakana's AI CUDA Engineer reported a speedup that fell substantially
+once the evaluation was audited — a reward-hacked harness. This estate has a
+matching scar: a
 reported kernel-pool bug was retracted after the harness, rather than the code,
 turned out to be wrong. A number obtained from a compromised harness is
 CANNOT-VERIFY.
@@ -559,8 +573,7 @@ of audit trail will become a default." The provenance design here was
 not built to the requirement, and satisfies it.
 
 The more useful finding is USENIX's natural experiment. Artifact deposition was
-mandated; reproduction stayed flat, and roughly half of deposited artifacts
-were never executed by anyone. Registering a `produced_by` command is
+mandated, and reproduction stayed flat. Registering a `produced_by` command is
 deposition. Executing it on a schedule is reproduction, and it is the part that
 almost nobody does. That is what `--verify-cheap` on a weekly cron is for, and
 it is where the durable value of this design sits.
@@ -569,12 +582,12 @@ it is where the durable value of this design sits.
 
 ## 5. Limitations
 
-**The command matcher is a denylist, and denylists are fragile.** Shell
-obfuscation defeats pattern matching at rates measured between 69% and 99%
-(arXiv 2606.15549). Two evasion shapes are matched explicitly (`${IFS}`,
+**The command matcher is a denylist, and denylists are fragile.** Between
+69.0% and 98.6% of denylists tested were found to carry at least one working
+bypass (arXiv 2606.15549). Two evasion shapes are matched explicitly (`${IFS}`,
 `gh alias set`) and that is a patch rather than a fix. The durable answers are
-canonicalization before matching — CARE-style approaches report 85.6% F1 at
-2.3ms — and an egress boundary. Neither is implemented here.
+canonicalization before matching and an egress boundary. Neither is
+implemented here.
 
 **The lenses share a model family.** Four lenses from one family carry roughly
 1.7 effective votes — a derived estimate, applying the Kish effective-sample
@@ -603,10 +616,9 @@ and 23% on the hardest constructs, with documented variance collapse (arXiv
 2607.03091).
 
 **Lens recall is unmeasured.** There is no seeded-defect fixture corpus, so the
-operating point of each lens is unknown. Rubric ablation is known to cost
-between 27 and 55 percentage points of recall, against 0.4 points for removing
-an entire agent, which suggests the rubrics matter far more than the count of
-lenses. Building that corpus is the highest-value open item.
+operating point of each lens is unknown. Rubric quality appears to matter far
+more than the count of lenses. Building that corpus is the highest-value open
+item.
 
 ---
 
@@ -657,8 +669,8 @@ The registry and the render gate. It is useful the day you install it.
 
 ## 7. Provenance
 
-This system was built agent-orchestrated with Claude, between 2026-08-14 and
-2026-08-17, in the course of publishing real work. Nothing here was designed in
+This system was built agent-orchestrated with Claude, beginning 2026-08-14, in
+the course of publishing real work. Nothing here was designed in
 advance. Every mechanism was added after a failure, and
 [`docs/incidents.md`](docs/incidents.md) maps each mechanism to the incident
 that produced it.
@@ -669,12 +681,11 @@ rather than a mistake made at the time of writing. It is most of them.
 Publishing systems are usually built to catch errors at authoring time, and
 almost nothing here failed at authoring time.
 
-Release of this repository is gated on the system it describes. The published
-README carries at least two SAFE ledger entries for its exact sha256, at least
-one of them anchored — a verdict whose note cites executed output, a fetched
-primary source, or file:line evidence — recorded before the repository became
-public. Editing this file after that point revokes those entries, which is the
-behaviour the gate exists to have.
+Release of this repository is gated on the system it describes: before any
+version of this file ships, it must carry at least two SAFE ledger entries for
+its exact sha256, at least one of them anchored — a verdict whose note cites
+executed output, a fetched primary source, or file:line evidence. Editing the
+file revokes those entries, which is the behaviour the gate exists to have.
 
 ## License
 

@@ -4,15 +4,16 @@
 # contains a live trigger for the hook that gates the shell running it.
 #
 # The first block is the audit corpus: every string in it was a working bypass
-# of an earlier version of the gate. The first fourteen came from fuzzing the
-# hook; the rest came from reading the matchers afterwards, which found the
-# HuggingFace forms and the argument-order hole. All are regression tests now.
-# The remaining blocks prove the legitimate flows still work, that the MCP side
+# of an earlier version of the gate. The first came from fuzzing the hook; the
+# rest came from reading the matchers afterwards, which found the HuggingFace
+# forms and the argument-order hole. All are regression tests now. The
+# remaining blocks prove the legitimate flows still work, that the MCP side
 # door is shut, that the ledger behaves, and that two spellings of one lens
 # cannot pass for two reviewers.
 #
-# Every case was written fail-first and each was confirmed to fail against the
-# version of the hook that preceded it.
+# Every DENY case in the audit corpus was written fail-first and confirmed to
+# be allowed by the version of the hook that preceded its fix. The ALLOW cases
+# are controls: they assert the gate did not become over-broad.
 #
 # The suite runs against a throwaway ledger directory, so it never touches the
 # real one and can be run on a machine that has no ledger at all.

@@ -14,7 +14,10 @@
 // gate/dry-run.mjs --selftest reads the hook and fails if the two disagree.
 
 // A name outside this set is a typo, not a new lens. A genuinely new lens is
-// added here deliberately, which is the point.
+// added here deliberately, which is the point. Two canonical names
+// (completeness, rendering) have no definition in lenses/ — they are estate
+// roles this repository does not ship; adopters replace this set with their
+// own before trusting check-lenses about their ledger.
 export const CANONICAL = new Set([
   'refuter', 'reproducer', 'recipient', 'claim-auditor', 'completeness', 'rendering',
 ]);

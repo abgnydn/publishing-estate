@@ -14,11 +14,14 @@ what is true right now.
 ## What "curated" means
 
 The live fleet is bound to one person's accounts, domains and checkouts. Ported
-verbatim it would be files of someone else's configuration. Two things were
-taken out on the way here, and nothing else was.
+verbatim it would be files of someone else's configuration. Two kinds of thing
+came out on the way here — configuration and surfaces — and a short list of
+machine-side machinery went with them. What is here is not a strict subset of
+what runs: each shipped checker also gained a fault case.
 
-**Config-out.** No checker names a domain, an account, a checkout path, a port
-or a schedule. Every one of them reads
+**Config-out.** No checker names a surface, an account, a checkout path, a port
+or a schedule. The only hostnames in the sources are the public API endpoints
+they query. Every one of them reads
 [`estate.example.json`](estate.example.json) through
 [`config.mjs`](config.mjs), or takes the one or two paths it needs as
 arguments. Copy the example to `estate.json`, point it at your own surfaces, and
@@ -42,12 +45,15 @@ Every checker in the fleet ended up with the same five properties. They were not
 designed in; each was added after a sweep failed in a way that looked like
 success.
 
-### 1. Selftests first, in the same process
+### 1. Selftests inside the checker
 
-`--selftest` plants known findings and asserts the real classifier reports them,
-then the real run proceeds. It runs *before* the sweep, not as a separate test
-command, because the failure being defended against is a broken sweep printing a
-clean sheet on a scheduled run nobody is watching.
+`--selftest` plants known findings and asserts the real classifier reports them.
+The failure being defended against is a broken sweep printing a clean sheet on a
+scheduled run nobody is watching — which is why the selftest ships inside the
+checker itself rather than as a suite to remember to run. In this directory it
+is a separate command that runs and exits; only `facts/check-facts.mjs` runs its
+self-check in the same process as the sweep, ahead of `--verify-cheap`. Wiring
+`--selftest` into every shipped sweep is open work.
 
 Every checker here carries one, and every one of them ends with the **fault
 case**: a missing config, a malformed config, a config naming nothing to check,
@@ -71,9 +77,10 @@ every pattern — including strings that were definitely present. It passed whil
 completely broken.
 
 The rule that came out of it: **treat any reported verification without a
-positive control as unverified.** A sweep must demonstrate, in the same run,
-that it can find a string known to be present. Each selftest here contains at
-least one case whose only job is that demonstration.
+positive control as unverified.** A sweep must be able to demonstrate that it
+can find a string known to be present. Each selftest here contains at least one
+case whose only job is that demonstration; in the shipped checkers it runs
+under `--selftest` rather than during the sweep.
 
 ### 3. UNREACHABLE is not a pass
 
@@ -96,8 +103,8 @@ makes a quiet week look like a dead project.
 
 ### 4. Graded severity, and a per-finding tolerance that is declared
 
-A guard that always fires gets bypassed. The other public implementation of an
-unbacked-number gate was switched off by its own author for noise. Grading is
+A guard that always fires gets bypassed. A comparable public gate we found was
+switched off by its own author for noise. Grading is
 what keeps a gate on: ERROR where a number is read as a claim, WARN where prose
 legitimately carries model specs and citation years.
 
@@ -221,8 +228,9 @@ FACT-DRIFT   zerotvm.md:9                       says 52 files; registered: zerot
 1 note file(s) read against 8 registered fact(s); 2 finding(s)
 ```
 
-`check-deployed.mjs` and `check-reach.mjs` refuse to run against the shipped
-example, because it configures no deployed url and no accounts:
+`check-deployed.mjs`, `check-reach.mjs` and `check-lenses.mjs` refuse to run
+against the shipped example, because it configures no deployed url, no accounts
+and no ledger:
 
 ```
 $ node checkers/check-reach.mjs --config checkers/estate.example.json

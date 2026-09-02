@@ -37,6 +37,7 @@ export const ALIASES = {
 // python copy in the hook. JS \s and python \s disagree at the edges
 // (U+0085, U+001C, U+FEFF), which was enough to let a BOM inside a lens name
 // mint a second reviewer in one implementation and not the other.
+// biome-ignore lint/suspicious/noControlCharactersInRegex: the control characters ARE the point - the class is deliberately explicit so both copies match the same set
 const SEPARATORS =
   /[_\t\n\v\f\r \u001c-\u001f\u0085\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]+/g;
 

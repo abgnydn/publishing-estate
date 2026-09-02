@@ -1,19 +1,40 @@
 # The checker fleet
 
-Pattern only. No checker source ships here.
-
-The ten checkers this pattern describes are bound to one person's surfaces: a
-named GitHub account, thirteen live domains, a specific HuggingFace user, a
-specific set of watched threads. Ported to your estate they would be ten files
-of someone else's configuration, and the useful part is not the code. The
-useful part is the shape every one of them converged on, and the incident each
-one exists to answer. Both are below.
+Six checker sources ship here, curated. The pattern essay below is what
+survived from the version of this file that shipped no source at all, and it is
+still the more useful half: the code is one estate's answer, the shape is
+everyone's.
 
 The registry (`facts/facts.json`) and the render gate (`render/build-sites.mjs`)
 stop a wrong number from reaching a *new* surface. The checker fleet is the
 other half: surfaces that were published before the fact changed, and surfaces
 nothing in the pipeline owns. A build gate protects the future. A checker asks
 what is true right now.
+
+## What "curated" means
+
+The live fleet is bound to one person's accounts, domains and checkouts. Ported
+verbatim it would be files of someone else's configuration. Two things were
+taken out on the way here, and nothing else was.
+
+**Config-out.** No checker names a domain, an account, a checkout path, a port
+or a schedule. Every one of them reads
+[`estate.example.json`](estate.example.json) through
+[`config.mjs`](config.mjs), or takes the one or two paths it needs as
+arguments. Copy the example to `estate.json`, point it at your own surfaces, and
+the checkers work unchanged.
+
+**Surfaces-out.** The example config points at
+[`fixtures/`](fixtures/) rather than at anything live, so the shipped example
+sweeps offline on any clone and demonstrates each rule firing. Where a section
+would have had to carry someone's account name it is empty instead — and an
+empty section is a hard failure, not a clean run.
+
+What did **not** cross over: the fleet runner and its cron glue, the per-surface
+snapshot diffing and its dismissal file, and the `--quiet` flag. The first two
+are machine state; the third existed for a runner that does not ship here, and
+its incident is recorded in [`../docs/incidents.md`](../docs/incidents.md)
+rather than reproduced in code.
 
 ## The shape
 
@@ -28,17 +49,18 @@ then the real run proceeds. It runs *before* the sweep, not as a separate test
 command, because the failure being defended against is a broken sweep printing a
 clean sheet on a scheduled run nobody is watching.
 
-`facts/check-facts.mjs` ships this and it is runnable:
+Every checker here carries one, and every one of them ends with the **fault
+case**: a missing config, a malformed config, a config naming nothing to check,
+an unreadable ledger entry or an unreadable workflow file must HARD-FAIL rather
+than sweep. That rule exists because three checkers once ran with a flag that
+routed their findings through the suppressed output channel, and one had never
+successfully reported in any scheduled sweep at all. Nothing noticed, because a
+broken sweep and a clean one produce the same output.
 
-```
-$ node facts/check-facts.mjs --verify-cheap
-```
-
-Its `selfCheck()` plants three cases — a mismatch, a match, and a command that
-exits non-zero — and pushes each through `runAndCompare()`, the same function
-the real facts go through. If any of the three is misread it prints
-`SELF-CHECK FAILED` and exits 2 without touching a real fact. A drift detector
-that cannot detect a planted drift has no business reporting on real numbers.
+The corollary is a rule about output channels: **a finding never travels through
+an optional one.** A checker that exits non-zero with empty stdout is reported
+as broken by any runner reading exit codes — correctly — and the real finding
+never arrives.
 
 ### 2. Positive controls on every sweep
 
@@ -50,7 +72,8 @@ completely broken.
 
 The rule that came out of it: **treat any reported verification without a
 positive control as unverified.** A sweep must demonstrate, in the same run,
-that it can find a string known to be present.
+that it can find a string known to be present. Each selftest here contains at
+least one case whose only job is that demonstration.
 
 ### 3. UNREACHABLE is not a pass
 
@@ -66,12 +89,23 @@ A checker that folds network failure into "clean" trains you to trust a green
 run that means nothing. A checker that folds it into "drift" trains you to
 ignore findings. It is a third category, and it stays a third category.
 
+`check-reach.mjs` is the sharpest case, because it is the one checker whose
+subject is a count. A source that did not answer must never become a zero: a
+missing number and a real zero mean opposite things there, and conflating them
+makes a quiet week look like a dead project.
+
 ### 4. Graded severity, and a per-finding tolerance that is declared
 
 A guard that always fires gets bypassed. The other public implementation of an
 unbacked-number gate was switched off by its own author for noise. Grading is
 what keeps a gate on: ERROR where a number is read as a claim, WARN where prose
 legitimately carries model specs and citation years.
+
+`check-orphans.mjs` grades by ranking rather than filtering. A number beside a
+unit is claim-shaped and sorts to the top; a number beside "followers" is
+somebody else's page furniture and sorts to the bottom. Both are printed, so
+nothing is silently dropped, and every benign rule states what it excuses and
+why — because a silent exclusion is how a sweep passes while blind.
 
 The same logic applies to drift. A fact backed by a live counter moves daily,
 and a finding that fires every sweep is noise. Such a fact declares
@@ -92,42 +126,123 @@ erratum retiring a published figure — and every surface citing it expires with
 no visible change anywhere. The only way to see it is to remember what the DOI
 resolved to last time.
 
+This is the one property the curated fleet does not demonstrate. A state file is
+machine state, so the snapshot half of `check-orphans.mjs` was left behind. The
+property is real and the incident behind it is in `docs/incidents.md`; the code
+for it is not here.
+
 ## The classes
 
-One page per class, with the incident each answers.
+One line per class, with the incident each answers. The six marked **ships**
+are in this directory.
 
 | class | watches for | born from |
 |---|---|---|
-| **facts** | rule violations in the registry; re-runs every cheap `produced_by` behind a sabotage-proof self-check | a shader-file count that drifted 50→51 in a day and was caught only because someone happened to re-run it by hand |
+| **facts** | rule violations in the registry; re-runs every cheap `produced_by` behind a sabotage-proof self-check. *Ships, as `facts/check-facts.mjs`.* | a shader-file count that drifted 50→51 in a day and was caught only because someone happened to re-run it by hand |
+| **orphans** | claim-shaped numbers on a live surface with no id at all, and one quantity published at two different values across two surfaces. **Ships.** | every defect found in one afternoon's manual read of the profile surfaces was unregistered, so none could drift, so none was reported |
+| **deployed** | built output that never shipped, by sentinel rather than by body hash. **Ships.** | a fix committed and pushed and still not live, while every local copy was "fixed" |
+| **memory** | withdrawn values, registry disagreements and stale git claims in the prose notes a session reads back as current. **Ships.** | a note asserting a repository was "7 commits unpushed" — true when written, a claim about right now when read |
+| **ci** | a pipeline that is absent, that races the tests instead of waiting for them, or that reports success having skipped. **Ships.** | a deploy triggered on the same push as the tests, whose missing secret made it exit 0 having done nothing |
+| **reach** | whether any of it is landing: archival record views, repository stars, model-hub downloads. **Ships.** | the preprints travelled while the runnable software records sat in single digits, invisible until someone went looking |
+| **lenses** | the verifier read as a surface: split quorums, serial runs, SAFE verdicts with no evidence behind them. **Ships.** | a lens-name typo counted as a second distinct reviewer, so one review satisfied a two-review quorum |
 | **copies** | any baked consumer copy behind the authority | four manual resyncs of one file in one day; consuming repos read their own stale copy and nothing read it back |
 | **numbers** | published claims re-fetched from the surface and compared against a manifest, including client-rendered DOM via a headless browser | a site publishing four different rates that `curl` could not see, because they were rendered in JS |
-| **withdrawn** | retracted values still live on any page, social card or model card — bare, comma-grouped and unit-formed | a withdrawn average living on a page comma-grouped, which a bare grep for the bare digits never matched (`docs/incidents.md`) |
+| **withdrawn** | retracted values still live on any page, social card or model card — bare, comma-grouped and unit-formed | a withdrawn average living on a page comma-grouped, which a bare grep for the bare digits never matched |
 | **dois** | DOIs that fail to resolve, version pins where a concept DOI belongs, and papers that moved to a new version | a site quoting figures its own papers' errata had retired |
-| **archives** | archival records materially behind the code they claim to archive | a flagship whose citable record was 251 commits stale |
+| **archives** | archival records materially behind the code they claim to archive | a flagship whose citable record was hundreds of commits stale |
 | **sites** | liveness, plus the SPA-fallback-served-as-`immutable` failure class | a missing asset frozen at the edge as HTML for a year, status 200 the whole time |
 | **threads** | deltas on watched threads and reactions on your own comments | replies landing unseen for days |
-| **identity** | JSON-LD `Person` consistency, ORCID gaps, email uniformity across citation files | twelve published identities and no path from any of them to the papers |
+| **identity** | JSON-LD `Person` consistency, ORCID gaps, email uniformity across citation files | a dozen published identities and no path from any of them to the papers |
 | **hf** | model-hub downloads, likes, and discovery metadata that silently hides a model | an untagged model invisible to task-filtered browse, which is how most people find models |
 
-Two of these — **numbers** and **withdrawn** — are worth building first if you
-build any. They are the two that check what is *live* rather than what is *in
-git*, and every incident in `docs/incidents.md` that survived the longest was
-live-only.
+**numbers** and **withdrawn** are the two worth building first if you build any,
+and they are the two that did not survive curation — both are almost entirely a
+list of one person's surfaces and one person's retracted values. They are the
+two that check what is *live* rather than what is *in git*, and every incident
+in `docs/incidents.md` that survived longest was live-only.
 
 ## Running them
 
-The fleet is driven by one runner that executes each checker, distinguishes
-UNREACHABLE from a finding, and exits non-zero if anything was found. It runs
-weekly from cron. Three properties of the runner matter:
+Every checker proves itself before it is trusted:
+
+```
+$ node checkers/check-orphans.mjs --selftest
+ok   planted orphan is caught
+ok   registered value is excused
+...
+ok   a config with zero surfaces is fatal
+```
+
+The first line here is the positive control and the last is the fault case.
+Every selftest in this directory contains both: at least one case whose only job
+is to prove the checker can still see a planted defect, and a closing block in
+which broken input hard-fails instead of sweeping.
+
+Then the shipped example, which sweeps the two fixture surfaces. Context
+strings are elided at both ends by the checker itself:
+
+```
+$ node checkers/check-orphans.mjs --config checkers/estate.example.json
+== 2 surface(s), 8 registered value(s)
+
+── fixture:site ──
+UNREGISTERED    592          …ne. It ships 51 files of hand-written WGSL. Measured across 592 devices during the June round. Published 2026-08-17 as v1.2…
+
+── fixture:profile ──
+unregistered?   1,204        …machine. Measured across 119 devices during the June round. 1,204 followers · 87 connections…
+unregistered?   119          …ns at 69.55 tok/s on the reference machine. Measured across 119 devices during the June round. 1,204 followers · 87 connect…
+unregistered?   87           …across 119 devices during the June round. 1,204 followers · 87 connections…
+
+── one quantity, two values, across surfaces ──
+CROSS-SURFACE  device                 119 vs 592  [fixture:site, fixture:profile]
+
+1 claim-shaped unregistered number(s), 1 cross-surface contradiction(s), across 2 readable surface(s)
+```
+
+Exit 1. Everything worth reading is in the grading. The registered 51 and 69.55
+are excused outright. The bundle hash inside a `<script>` block is never read.
+The follower and connection counts are printed but ranked to the bottom as
+somebody else's page furniture, and 592 — beside a unit, on a page that is
+making a claim — is the one thing raised to `UNREGISTERED`. Nothing was dropped
+to get there. And the two fixtures disagree about one quantity in the way two
+real surfaces do.
+
+`check-memory.mjs` on the same config fires on the planted note and stays quiet
+on the same value inside its own retraction two lines below it, which is the
+guard that makes the rule usable rather than noise:
+
+```
+$ node checkers/check-memory.mjs --config checkers/estate.example.json
+RETIRED      zerotvm.md:10                      carries 2865, withdrawn as kernelfusion.apple_avg_2865x
+             …- The kernel work reached 2865x end to end on the Apple parts.…
+FACT-DRIFT   zerotvm.md:9                       says 52 files; registered: zerotvm.wgsl_files=51
+             …- It ships 52 files of hand-written WGSL today.…
+
+1 note file(s) read against 8 registered fact(s); 2 finding(s)
+```
+
+`check-deployed.mjs` and `check-reach.mjs` refuse to run against the shipped
+example, because it configures no deployed url and no accounts:
+
+```
+$ node checkers/check-reach.mjs --config checkers/estate.example.json
+CONFIG  the "reach" section names no zenodo record, github user or huggingface author — there is nothing to ask about, which is not a report of no reach
+```
+
+Exit 2. That is the point, and it is what the fault case is for: a checker that
+prints a clean sheet because it had nothing to look at is the failure the whole
+fleet exists to prevent.
+
+Three properties of a runner matter, if you build one:
 
 - A missing checker is skipped, not an error. The fleet grows and shrinks.
 - Each checker owns its own state file, next to itself.
-- The runner never edits anything. Rule 5 of the registry says a value changes
-  by re-running `produced_by`; deciding that a new number is the right one to
+- The runner never edits anything. Registry rule 5 says a value changes by
+  re-running `produced_by`; deciding that a new number is the right one to
   publish is a judgement, so the checker reports and a person decides.
 
-The cheap pass is affordable weekly — measured at 2.5s warm, 4.9s cold, network
-included. The expensive pass re-runs real GPU benchmarks and a test suite that
-takes 9m30s on its own, so it is run by hand. The split is declared per fact in
-the registry (`cost: "cheap" | "expensive"`) and is measured, not guessed: one
-test-count fact touches no GPU at all and still takes 9m30s.
+The cheap pass is affordable weekly. The expensive pass re-runs real GPU
+benchmarks and a test suite that takes minutes on its own, so it is run by hand.
+The split is declared per fact in the registry (`cost: "cheap" | "expensive"`)
+and is measured, not guessed: in the author's full registry, one test-count fact
+touches no GPU at all and is expensive anyway.

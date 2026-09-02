@@ -180,11 +180,17 @@ surface. The checker fleet covers surfaces that were published before the fact
 changed, and surfaces nothing in the pipeline owns. A build gate protects the
 future. A checker asks what is true right now.
 
-The pattern ships here; the checker sources do not. They are bound to one
-person's accounts, domains and watched threads, and ported elsewhere they would
-be files of someone else's configuration. The useful part is the shape all of
-them converged on. [`checkers/README.md`](checkers/README.md) has the full
-description and the ten classes.
+Six checker sources ship in [`checkers/`](checkers/), curated, alongside the
+pattern they converged on. Curated means two things and nothing else.
+**Config-out**: no checker names a domain, an account, a checkout path, a port
+or a schedule, and every one reads
+[`checkers/estate.example.json`](checkers/estate.example.json) or takes the
+paths it needs as arguments. **Surfaces-out**: the shipped example points at
+fixtures rather than at anything live, so it sweeps offline on any clone.
+The classes that did not survive that — the ones which are almost entirely a
+list of one person's surfaces and one person's retracted values — are described
+rather than shipped. [`checkers/README.md`](checkers/README.md) has the full
+description and the classes.
 
 ```mermaid
 flowchart TD
@@ -238,6 +244,15 @@ version, so an erratum retiring a figure expires every citing surface with no
 visible change anywhere. The only way to see it is to remember what the DOI
 resolved to last time.
 
+**The fault case is required, not optional.** Every checker's `--selftest` ends
+with a block in which broken input HARD-FAILS: a missing config, a malformed
+config, a config naming nothing to check, an unreadable ledger entry, an
+unreadable workflow file. That rule exists because three checkers once ran with
+a flag that routed their findings through the suppressed output channel, and one
+had never successfully reported in any scheduled sweep at all. Nothing noticed,
+because a broken sweep and a clean one produce the same output. The corollary is
+that a finding never travels through an optional output channel.
+
 ### Running the example
 
 The selftest and the cheap re-run pass are both in the shipped checker:
@@ -249,6 +264,14 @@ $ node facts/check-facts.mjs --verify-cheap
 Sabotage it to watch the selftest work. Change one of the three planted
 expectations in `selfCheck()` and re-run: the process prints `SELF-CHECK
 FAILED` and exits 2 before reading a real fact.
+
+Each checker in [`checkers/`](checkers/) carries the same two things: a
+`--selftest` that plants a defect it must see, and a fault case at the end in
+which broken input stops the run. The shipped example config sweeps two fixture
+surfaces that disagree with each other about one quantity, and two of the
+checkers refuse to run against it at all because it configures no accounts and
+no deployed url — which is the fault case doing its job rather than a gap in the
+example.
 
 ---
 
@@ -281,10 +304,11 @@ flowchart TD
   SHA --> HK
   LD --> HK
   HK -->|"any DO-NOT-POST entry"| DN
-  HK -->|"fewer than 2 distinct SAFE lenses"| DN
+  HK -->|"fewer than 2 distinct SAFE lenses<br/>(names normalised first)"| DN
   HK -->|"no SAFE entry is anchored"| DN
   HK -->|"artifact edited: hash no longer matches"| DN
   HK -->|"2 distinct SAFE, at least 1 anchored"| AL["allow, with a system message"]
+  LD --> AR["gate/dry-run.mjs<br/>the same verdict, without attempting the publish"]
 ```
 
 ### The rules
@@ -302,6 +326,15 @@ the gate additionally requires one verdict whose note cites execution output, a
 fetched primary source, or a file and line. Reading-only agreement, however
 unanimous, does not clear the gate.
 
+**Distinct means normalised, because a typo is not a reviewer.** The count is
+over lens names, and a ledger holding both `claims` and `claim-auditor` — two
+spellings of one reviewer — satisfied a two-review quorum with one review.
+Names are normalised before anything is counted.
+[`checkers/check-lenses.mjs`](checkers/check-lenses.mjs) reads the ledger as a
+surface and reports the entries that made normalising necessary, along with
+lenses that were run one at a time when they are independent by construction,
+and SAFE verdicts carrying no evidence at all.
+
 **Any DO-NOT-POST vetoes outright** and cannot be outvoted by any number of
 SAFEs. There is no ABSTAIN. A lens that could not verify writes DO-NOT-POST,
 because CANNOT-VERIFY is not agreement.
@@ -312,6 +345,25 @@ requires both the flag and the artifact path, as environment assignments at the
 start of the command. The anchoring matters: an audit found that the literal
 string `CLAUDE_PUBLISH_VERIFIED=1`, quoted inside untrusted content a lens was
 reviewing, self-authorized the gate.
+
+**A verdict you can ask for without publishing.** The only way to learn what
+the gate would decide used to be to attempt the publish, which is a bad way to
+ask a question whose wrong answer is a notification that has already been
+emailed. [`gate/dry-run.mjs`](gate/dry-run.mjs) reads the ledger and prints the
+verdict the hook would reach, in the hook's order of precedence, and can approve
+nothing. The state it exists to surface is neither pass nor fail: lenses on
+record for the *path* but at a different sha, because the file was edited after
+it was verified. `test/dry-run-agrees.sh` puts the same ledger states to both
+and fails on any disagreement, because a readout that has drifted from the rule
+it claims to read out is worse than no readout.
+
+**The approved bytes are kept beside the entry.** An entry is keyed by sha256
+alone, so once the artifact changed, moved, or the scratch directory holding it
+was deleted, the entry proved *that* something was reviewed and never *what*.
+`gate/dry-run.mjs --archive` copies the verified bytes to `<sha256>.body` beside
+the entry, and refuses to write a body whose hash is not the name it would be
+stored under — so a drifted file cannot quietly become the record of what was
+approved.
 
 **The MCP side door is shut.** A GitHub MCP server exposes `create_pull_request`,
 `add_issue_comment` and `issue_write` as tool calls that never produce a command
@@ -331,6 +383,15 @@ and a date on every rule, because the same rules previously lived as prose
 inside one agent definition and at six platforms that becomes six drifting
 copies of one checklist.
 
+**Each lens pins its own model and reasoning effort.** They used to run at
+whatever the spawning session happened to be using, so two runs of nominally the
+same quorum were not the same quorum, and nothing on the ledger entry recorded
+which had happened. A quorum whose quality depends on an ambient setting is not
+a quorum. [`docs/tiers.md`](docs/tiers.md) has the policy: three capacity tiers
+for pipeline agents, starting at the lowest that can do the job and escalating
+only on a specific demonstrated failure, with the lenses standing outside it as
+a pinned exception.
+
 **Verification depth follows reversibility rather than platform.** `platforms.json`
 carries five tiers. `permanent` (DOIs, npm versions, git tags) takes all four
 lenses and a human read. `notifies` (GitHub issues, PRs, comments) takes the
@@ -342,30 +403,47 @@ everything gets turned off.
 
 ### Running the example
 
-`test/hook-test.sh` is a 32-case adversarial and regression suite, written
-fail-first. Its first block is the audit corpus: every string in it was a
-working bypass of an earlier version of the gate. It runs against a throwaway
-ledger directory and never touches a real one.
+`test/hook-test.sh` is an adversarial and regression suite, written fail-first.
+Its first block is the audit corpus: every string in it was a working bypass of
+an earlier version of the gate, and each was confirmed to be allowed by the
+version of the hook that preceded its fix. It runs against a throwaway ledger
+directory and never touches a real one.
 
 ```
 $ bash test/hook-test.sh
 ── the audit corpus: every one of these must DENY ──
 PASS  quoted flag in body (self-auth hole)                 DENY
 ...
+PASS  hf upload straight to main                           DENY
+PASS  git push to a HuggingFace Space                      DENY
+PASS  curl github write, flag before host                  DENY
+...
 ── ledger flow ──
 PASS  2 SAFE but ZERO anchored -> deny                     DENY
 PASS  2 SAFE, 1 anchored -> pass                           PASSLED
 PASS  DO-NOT-POST vetoes 2 SAFEs                           DENY
 PASS  edited file -> stale hash blocks                     DENY
+── lens-name normalisation: a typo is not a second reviewer ──
+PASS  two spellings of one lens are one reviewer           DENY
+PASS  an alias still counts as its canonical lens          PASSLED
 ── ledger scale: 600 entries under the timeout ──
 600-entry ledger scan wall time: <seconds> (must be well under 10)
 
-RESULT: 32 passed, 0 failed
+RESULT: 44 passed, 0 failed
 ```
 
 The wall time is the one line above that is a measurement rather than a
 verdict, so it is shown as a placeholder. Observed at 0 to 1 second on an
 M2 Max, against a bound of 10.
+
+The three named audit-corpus lines above were the second round of holes, found
+by reading the matchers rather than by fuzzing them. Only the pull-request form
+of a model-hub upload was gated, so the *safer* shape was blocked and a direct
+write to main was not; the matcher that should have covered the gap carried a
+`\\.` inside a single-quoted bash regex, which matches a literal backslash and
+therefore never fired at all; and the curl matchers required the write flag to
+appear after the host, so the same command with its arguments in the other order
+passed.
 
 The last block is a regression test for a failure worth stating plainly. The
 ledger scan once spawned three processes per entry, and past roughly 580
@@ -375,7 +453,9 @@ block, so the gate would have silently disabled itself as the ledger grew.
 To install the hook, register `gate/verify-before-publish.sh` as a PreToolUse
 hook on `Bash` and on the MCP tool namespace. Two environment variables
 configure it: `PUBLISH_LEDGER_DIR` (default `$HOME/.claude/verify-ledger`) and
-`PUBLISH_REQUIRED_LENSES` (default 2). The entry shape is specified in
+`PUBLISH_REQUIRED_LENSES` (default 2). `gate/dry-run.mjs` honours both, in the
+same order, so it cannot end up reading a different ledger than the one that
+decides. The entry shape is specified in
 [`gate/ledger-entry.schema.json`](gate/ledger-entry.schema.json).
 
 ---
@@ -553,17 +633,22 @@ The registry and the render gate. It is useful the day you install it.
 
 ### Full path
 
-4. Add the fleet. Build the **withdrawn** and **numbers** checkers first. They
-   are the two that check what is live rather than what is in git, and every
-   incident that survived longest was live-only. Put `--selftest` and a
-   positive control in each before you put either on cron.
+4. Add the fleet. Copy `checkers/estate.example.json` to `estate.json` and point
+   it at your own surfaces; the six shipped checkers need nothing else. Then
+   build the **withdrawn** and **numbers** classes, which are described in
+   `checkers/README.md` and are not shipped — they are the two that check what
+   is live rather than what is in git, and every incident that survived longest
+   was live-only. Put `--selftest`, a positive control and a fault case in each
+   before you put any of them on cron.
 5. Add the lenses. Start with `refuter` and `reproducer`; they are the two the
    `notifies` tier requires, which is most of what a technical account
-   publishes.
+   publishes. Pin their model and effort in the definitions rather than
+   inheriting either — see `docs/tiers.md`.
 6. Install `gate/verify-before-publish.sh` as a PreToolUse hook and run
    `bash test/hook-test.sh` against your installed copy. Then fuzz it yourself.
    Eight bypasses took under an hour to find the first time this one was
-   audited.
+   audited, and reading the matchers afterwards found more. Run
+   `node gate/dry-run.mjs` when you want the verdict without the publish.
 7. Write `platforms.json` from your own posting record rather than from what
    the rules pages say. Mark anything you have not checked `unaudited`. An
    invented rule is worse than a recorded gap.

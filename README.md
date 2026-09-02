@@ -608,9 +608,12 @@ it is where the durable value of this design sits.
 
 ## 5. Limitations
 
-**The command matcher is a denylist, and denylists are fragile.** Across seven
-blocked-operation types, between 69.0% and 98.6% of the denylists targeting an
-operation overlooked at least one validated bypass for it (arXiv 2606.15549). Two evasion shapes are matched explicitly (`${IFS}`,
+**The command matcher is a denylist, and denylists are fragile.** Across the
+seven blocked file-system operation types arXiv 2606.15549 studied, between
+69.0% and 98.6% of the denylists targeting an operation overlooked at least
+one validated bypass for it. That study excludes network operations — the
+class this matcher mostly gates — so it bounds the shape of the problem rather
+than measuring this gate's. Two evasion shapes are matched explicitly (`${IFS}`,
 `gh alias set`) and that is a patch rather than a fix. The durable answers are
 canonicalization before matching and an egress boundary. Neither is
 implemented here.

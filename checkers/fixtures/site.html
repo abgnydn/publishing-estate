@@ -1,0 +1,21 @@
+<!doctype html>
+<!--
+  A planted surface, in the spirit of render/sites.source.withdrawn.json: it
+  exists so the sweep can be watched finding something, on any clone, with no
+  network. Its numbers are the shapes each rule is about, not claims.
+-->
+<html lang="en">
+  <head><title>fixture: a project page</title></head>
+  <body>
+    <h1>A project page</h1>
+    <p>Decode runs at 69.55 tok/s on the reference machine.</p>
+    <p>It ships 51 files of hand-written WGSL.</p>
+    <p>Measured across 592 devices during the June round.</p>
+    <p>Published 2026-08-17 as v1.2.3. See https://example.invalid/10.5281/zenodo.9999999 for the record.</p>
+    <script>
+      // A bundle hash is not a published claim, so script blocks are stripped
+      // before anything is read. 424242 must never be reported from here.
+      document.documentElement.dataset.build = "424242";
+    </script>
+  </body>
+</html>

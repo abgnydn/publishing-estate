@@ -1,0 +1,56 @@
+{
+  "_readme": [
+    "The configuration every checker in this directory reads. Copy it to",
+    "checkers/estate.json, point it at your own surfaces, and the checkers work",
+    "unchanged. Nothing in this directory names a domain, an account or a",
+    "checkout path of its own.",
+    "",
+    "Paths are resolved relative to THIS FILE, so a checker run from any",
+    "directory reads the same surfaces. A leading ~ is your home directory.",
+    "",
+    "  facts     the fact registry numbers are checked against.",
+    "            Read by check-orphans and check-memory.",
+    "  surfaces  what check-orphans sweeps. Each entry is {id, url} for a live",
+    "            page or {id, file} for a local one. Both entries below are",
+    "            fixtures, so the example sweep runs offline on any clone.",
+    "  repos     what check-deployed and check-ci read, and what check-memory",
+    "            resolves a volatile git claim against. name is required; local",
+    "            is the checkout, url the deployed surface, out the build output",
+    "            directory relative to the checkout.",
+    "  notes     dir: a directory of prose files check-memory reads back against",
+    "            the registry.",
+    "  reach     accounts check-reach asks about. Empty here on purpose: a",
+    "            shipped account name would be someone else's configuration, and",
+    "            an empty section is a usage error rather than a clean run.",
+    "  ledger    where lens verdicts are written. check-lenses and",
+    "            gate/dry-run.mjs read it; both also accept --ledger, and both",
+    "            honour the PUBLISH_LEDGER_DIR the gate itself uses.",
+    "",
+    "Any section a checker needs and does not find is a hard failure. A checker",
+    "that reports zero findings because it had nothing to look at is the failure",
+    "this fleet exists to prevent."
+  ],
+
+  "facts": "../facts/facts.json",
+
+  "surfaces": [
+    { "id": "fixture:site", "file": "fixtures/site.html" },
+    { "id": "fixture:profile", "file": "fixtures/profile.html" }
+  ],
+
+  "repos": [
+    {
+      "name": "publishing-estate",
+      "local": "..",
+      "url": null,
+      "out": null,
+      "owner": null
+    }
+  ],
+
+  "notes": { "dir": "fixtures/notes" },
+
+  "reach": { "github_user": null, "hf_author": null, "zenodo": [] },
+
+  "ledger": null
+}

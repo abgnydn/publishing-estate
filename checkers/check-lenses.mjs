@@ -40,30 +40,12 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { ConfigError, configPath, fatal, flag, readConfig } from './config.mjs';
+// The gate owns the canonical names, because the gate is what counts them. This
+// checker reports on the entries that made normalising necessary, so it must
+// read the same list rather than keep its own.
+import { CANONICAL, normalise } from '../gate/lens-names.mjs';
 
 const args = process.argv.slice(2);
-
-// The canonical reviewers. A name outside this set is a typo, not a new lens —
-// a genuinely new lens is added here deliberately, which is the point.
-export const CANONICAL = new Set([
-  'refuter', 'reproducer', 'recipient', 'claim-auditor', 'completeness', 'rendering',
-]);
-
-// Kept identical to the map inside gate/verify-before-publish.sh. Two copies of
-// one list is the drift this estate exists to prevent, so if you add an alias,
-// add it in both places in the same commit and let the gate's test suite fail
-// you if you do not.
-const ALIASES = {
-  'rendering-and-mechanics': 'rendering',
-  claims: 'claim-auditor',
-  'claim-audit': 'claim-auditor',
-  reproduction: 'reproducer',
-};
-
-export function normalise(lens) {
-  const n = String(lens ?? '').trim().toLowerCase().replace(/[_\s]+/g, '-');
-  return ALIASES[n] ?? n;
-}
 
 // Lenses finishing within this of each other were running together. Chosen from
 // observed data: parallel runs cluster within a couple of minutes between

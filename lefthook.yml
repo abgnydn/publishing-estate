@@ -55,6 +55,20 @@ pre-push:
     hook-suite:
       run: bash test/hook-test.sh
 
+    # The dry run must reach the hook's verdict on every ledger state, or it is
+    # a second implementation of the rule rather than a readout of it.
+    dry-run-agrees:
+      run: bash test/dry-run-agrees.sh
+
+    # Every checker proves it can still see a planted defect before it is
+    # trusted to report on a real surface.
+    checker-selftests:
+      run: |
+        for c in orphans deployed reach memory ci lenses; do
+          node "checkers/check-$c.mjs" --selftest > /dev/null || exit 1
+        done
+        node gate/dry-run.mjs --selftest > /dev/null
+
     # The render gate must be demonstrably red against the planted source, or
     # the demonstration in the README has stopped demonstrating anything.
     render-gate-red:

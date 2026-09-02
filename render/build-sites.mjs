@@ -133,8 +133,13 @@ function walk(node, path) {
     // exactly the thing this build exists to prevent. This was a warning
     // until 2026-08-15, and warnings turned out to be a path: 71x, 0.988 and
     // 100% all shipped through it. A tile value is short and always
-    // redesignable, so here it is an error.
-    if (STAT_CONTEXT.test(path) && !node.includes('{{fact:') && METRIC_DIGIT.test(node)) {
+    // redesignable, so here it is an error. Placeholders are STRIPPED before
+    // the test, like the warning paths below — an earlier version
+    // short-circuited on the presence of a placeholder anywhere in the
+    // string, so a value mixing a placeholder with a hand-typed literal
+    // ("{{fact:id}} at 42 W") was not graded at all.
+    if (STAT_CONTEXT.test(path)
+      && METRIC_DIGIT.test(node.replace(/\{\{fact:[^}]+\}\}/g, ''))) {
       errors.push(`${path}: literal number "${node}" — not traceable to a fact id; use {{fact:id}} or de-number the tile`);
     }
     // Taglines mix metrics with names (Phi-3, b1.58 2B4T), so a literal

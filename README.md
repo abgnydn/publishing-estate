@@ -608,9 +608,9 @@ it is where the durable value of this design sits.
 
 ## 5. Limitations
 
-**The command matcher is a denylist, and denylists are fragile.** Between
-69.0% and 98.6% of denylists tested were found to carry at least one working
-bypass (arXiv 2606.15549). Two evasion shapes are matched explicitly (`${IFS}`,
+**The command matcher is a denylist, and denylists are fragile.** Across seven
+blocked-operation types, between 69.0% and 98.6% of the denylists targeting an
+operation overlooked at least one validated bypass for it (arXiv 2606.15549). Two evasion shapes are matched explicitly (`${IFS}`,
 `gh alias set`) and that is a patch rather than a fix. The durable answers are
 canonicalization before matching and an egress boundary. Neither is
 implemented here.
@@ -688,8 +688,10 @@ The registry and the render gate. It is useful the day you install it.
    inheriting either — see `docs/tiers.md`.
 6. Install `gate/verify-before-publish.sh` as a PreToolUse hook and run
    `bash test/hook-test.sh` — it tests the repository's copy by default; point
-   `HOOK_UNDER_TEST` at your installed copy to test that instead. Then fuzz it
-   yourself.
+   `HOOK_UNDER_TEST` at your installed copy to test that instead (valid only if
+   that copy honours `PUBLISH_LEDGER_DIR` — a copy that hardcodes its ledger
+   path silently runs the ledger-flow cases against your real ledger). Then
+   fuzz it yourself.
    Eight bypasses took under an hour to find the first time this one was
    audited, and reading the matchers afterwards found more. Run
    `node gate/dry-run.mjs` when you want the verdict without the publish.

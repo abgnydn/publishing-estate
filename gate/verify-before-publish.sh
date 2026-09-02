@@ -329,7 +329,7 @@ ${skipped_block}
 ${standing_rule}"
 fi
 
-# Quorum lesson from the 2026-08 verification survey: four same-family lenses
+# Quorum lesson from this estate's own 2026-08 review work: four same-family lenses
 # carry far fewer than four independent votes (correlations: arXiv 2605.29800),
 # and a SAFE is absence-of-evidence from a lens
 # whose measured defect recall is poor. Counting SAFEs is therefore not enough:

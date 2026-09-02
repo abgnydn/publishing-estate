@@ -113,9 +113,9 @@ CANNOT-VERIFY is a routing signal (say what evidence would settle it), not just
 a rejection. Set `"anchored": true` in your ledger entry only when the note
 cites the artifact.
 
-Do not argue with yourself across turns. Argumentative self-dialogue triggers
-sycophancy 2-3x more than direct checking (arXiv 2604.21564); state each check
-once, against its source.
+Do not argue with yourself across turns. Argumentative debate with a simulated
+user triggers sycophancy 2-3x more than direct questioning (arXiv 2604.21564);
+state each check once, against its source.
 
 ## Blinding
 

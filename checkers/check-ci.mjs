@@ -235,6 +235,15 @@ function git(dir, a) {
 // repo) must say so: scoring freshness as "does not apply" would make the
 // score IMPROVE when a tool goes missing. Exported so the selftest can plant
 // the case without removing git from PATH.
+// The score itself must obey the same rule: an unverifiable criterion stays in
+// the denominator and is never met. Module-level and exported so the selftest
+// asserts the arithmetic, not just the printed line.
+export function scoreOf(x) {
+  const vals = CRITERIA.map(([, fn]) => fn(x));
+  const applicable = vals.filter((v) => v !== null);
+  return { met: applicable.filter((v) => v === true).length, of: applicable.length, vals };
+}
+
 export function gitSilence(name, lastCommit) {
   if (lastCommit !== null) return null;
   return `UNREACHABLE    ${String(name).padEnd(22)} git did not answer in the checkout — `
@@ -243,15 +252,22 @@ export function gitSilence(name, lastCommit) {
 
 // --------------------------------------------------------------------- main
 
-// Each rule returns true, false, or null for "does not apply here". A repo with
-// no deploy has nothing to gate; scoring that as gated gives credit for a
-// property it cannot have and flatters the emptiest repos.
-const CRITERIA = [
+// Each rule returns true, false, null for "does not apply here", or
+// 'unreachable' for "could not be verified". A repo with no deploy has nothing
+// to gate; scoring that as gated gives credit for a property it cannot have
+// and flatters the emptiest repos. But unverifiable is not inapplicable: an
+// unreachable criterion stays in the denominator and is never met, so a
+// missing tool can only lower the score, never lift it.
+export const CRITERIA = [
   ['ci', (x) => x.workflows > 0],
   ['tests', (x) => (x.workflows > 0 ? x.hasTests : null)],
   ['ran', (x) => (x.reachable === false ? null : (x.runs ?? []).length > 0)],
   ['green', (x) => (x.reachable === false || !x.lastRun ? null : x.lastRun.conclusion === 'success')],
-  ['fresh', (x) => (x.reachable === false || !x.lastRun || !x.lastCommit ? null : x.lastRun.at >= x.lastCommit)],
+  ['fresh', (x) => {
+    if (x.reachable === false || !x.lastRun) return null;
+    if (!x.lastCommit) return 'unreachable';
+    return x.lastRun.at >= x.lastCommit;
+  }],
   ['gated', (x) => (x.publishers.length ? x.publishers.every((p) => p.gated || !p.triggers.includes('push')) : null)],
   ['honest', (x) => (x.publishers.length ? x.publishers.every((p) => !p.silentSkips.length) : null)],
   ['hooks', (x) => x.lefthook],
@@ -383,22 +399,17 @@ async function main() {
   }
 
   // ---- the completeness table: which pipelines are actually finished ----
-  const scoreOf = (x) => {
-    const vals = CRITERIA.map(([, fn]) => fn(x));
-    const applicable = vals.filter((v) => v !== null);
-    return { met: applicable.filter(Boolean).length, of: applicable.length, vals };
-  };
   console.log('');
   console.log(`== pipeline completeness  (${CRITERIA.map((c) => c[0]).join(' · ')})`);
   const scored = rows.map((x) => ({ x, s: scoreOf(x) }));
   scored.sort((a, b) => (a.s.met / (a.s.of || 1)) - (b.s.met / (b.s.of || 1)) || a.x.name.localeCompare(b.x.name));
   for (const { x, s } of scored) {
-    const marks = s.vals.map((v) => (v === null ? '·' : v ? '+' : '.')).join('');
+    const marks = s.vals.map((v) => (v === null ? '·' : v === 'unreachable' ? '?' : v ? '+' : '.')).join('');
     console.log(`  ${marks}  ${String(s.met).padStart(2)}/${String(s.of).padEnd(2)} ${String(x.name).padEnd(22)}`
       + (x.lastRun ? `${x.lastRun.conclusion} ${x.lastRun.at.slice(0, 10)}`
         : x.reachable === false ? `runs unreadable — ${x.why}` : 'never ran'));
   }
-  console.log('  + present   . missing   · does not apply (nothing to gate, or unreadable)');
+  console.log('  + present   . missing   ? unverifiable (in the denominator, never met)   · does not apply');
   if (skipped.length) console.log(`  not checked at all, no local checkout: ${skipped.join(', ')}`);
 
   console.log(`\n${rows.length} repo(s) with a checkout; ${findings} finding(s)`);
@@ -509,6 +520,21 @@ jobs:
     gitSilence('proj', null) !== null);
   ck('a git that answered produces no unreachable line', null,
     gitSilence('proj', '2026-01-01T00:00:00+00:00'));
+  // And the arithmetic: unverifiable stays in the denominator, never met, so a
+  // missing binary can only lower the score. This was found live: with git off
+  // PATH, freshness read as "does not apply" and the ratio IMPROVED.
+  {
+    const base = {
+      workflows: 1, hasTests: true, lefthook: true, reachable: true,
+      runs: [{}], lastRun: { at: '2026-01-02', conclusion: 'success' }, publishers: [],
+    };
+    const withGit = scoreOf({ ...base, lastCommit: '2026-01-01' });
+    const without = scoreOf({ ...base, lastCommit: null });
+    ck('an unverifiable criterion stays in the denominator', withGit.of, without.of);
+    ck('and is never met, so the score drops rather than lifts', withGit.met - 1, without.met);
+    ck('and renders as its own mark, not as does-not-apply', 'unreachable',
+      without.vals[CRITERIA.findIndex(([n]) => n === 'fresh')]);
+  }
   ck('a missing config is fatal, not an empty report', true,
     threw(() => configFrom(['--config', '/nonexistent/estate.json'], here)));
   ck('a config with zero repos is fatal', true, threw(() => section({ repos: [] }, 'repos')));

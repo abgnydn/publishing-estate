@@ -72,7 +72,7 @@ flowchart TD
   B -->|"kind is tally, in a headline surface"| E
   B -->|"bare digit in a stat tile"| E
   B -->|"binding caveat cannot travel"| E
-  B -->|"bare digit in a tagline, stat label or prose"| W["WARNING: reported, build continues"]
+  B -->|"bare digit in a tagline, stat label or short description"| W["WARNING: reported, build continues"]
   B -->|"every placeholder resolves"| G["render/generated/sites.json<br/>regenerated, never edited"]
   W --> G
   G --> P["public surface"]
@@ -121,9 +121,10 @@ then moved from 50 to 51 the following day.
 Severity follows the surface a number lands on rather than the rule it breaks.
 A stat tile is short, always
 redesignable, and read as a claim, so a literal number there is an ERROR. A
-tagline mixes metrics with product names, and prose legitimately carries model
-specifications, physics scales and citation years, so a literal number in
-either is a WARNING that is reported and does not block. A comparable public
+tagline mixes metrics with product names, and a stat label or short
+description legitimately carries model specifications, physics scales and
+citation years, so a literal number in those three fields is a WARNING that is
+reported and does not block. A comparable public
 gate, found in the author's unpublished survey of the space, was switched off
 by its own author for noise. Grading by surface is what keeps this one turned
 on.
@@ -151,9 +152,10 @@ $ node facts/check-facts.mjs --verify-cheap
 self-check passed; 4 cheap facts re-run against their produced_by
 ```
 
-Exit 1 today on the author's machine: the elided lines are FACT-DRIFT
+Exit 1 today on the author's machine: the elided lines are two FACT-DRIFT
 findings — a live counter beyond its declared band, and the retired
-checkout-local count — which is the checker working, as section 2 describes.
+checkout-local count — plus the WARN the block above already shows, which is
+the checker working, as section 2 describes.
 Several `produced_by` commands point at the author's own checkouts and will
 report UNREACHABLE elsewhere, which is the correct answer. `example.lens_files`
 is repo-local and re-runs green on any clone, so the pass always has something
@@ -538,9 +540,9 @@ The sharpest result here is Stechly et al. (arXiv 2310.12397). Self-critique
 made models worse, from 16% to 1%, while an external verifier reached roughly
 40%. The control is what matters: with the sound verifier still deciding
 correctness, roughly 40% held whether the feedback was binary, a single error,
-the full error list, or the LLM's own hallucinated critique, and the paper's
-fabricated-feedback condition left performance unaffected — the critique
-content is irrelevant, and the external check carries the value. Guey and Bougault (arXiv 2606.20093) is the complement: with validity
+the full error list, or the LLM's own hallucinated critique — the paper's own
+summary is that all four types of backprompting give roughly similar results.
+The critique content is irrelevant, and the external check carries the value. Guey and Bougault (arXiv 2606.20093) is the complement: with validity
 decided by a deterministic verifier, self-preference is weak or absent — no
 detectable effect, with anything under roughly 13 points not excluded at their
 sample size.

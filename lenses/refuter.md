@@ -105,9 +105,9 @@ file:line. The literature's sharpest control (Stechly, arXiv 2310.12397):
 self-critique made models WORSE (16%->1%) while an external verifier hit ~40% --
 and with the sound verifier still deciding, ~40% held whether the feedback was
 binary, a single error, the full error list, or the LLM's own hallucinated
-critique; the paper's fabricated-feedback condition left performance
-unaffected. The critique content is irrelevant, the external check carries the
-value. If you cannot anchor, the verdict is
+critique; the paper's own summary is that all four types of backprompting give
+roughly similar results. The critique content is irrelevant, the external
+check carries the value. If you cannot anchor, the verdict is
 CANNOT-VERIFY -- and
 CANNOT-VERIFY is a routing signal (say what evidence would settle it), not just
 a rejection. Set `"anchored": true` in your ledger entry only when the note

@@ -264,15 +264,15 @@ function selftest() {
   // config input stops the run rather than sweeping against nothing. These go
   // through ledgerDir() itself, not a re-implementation of it.
   const threw = (fn) => { try { fn(); return false; } catch { return true; } };
-  ck('a missing config is fatal, not an empty sweep', true,
-    threw(() => ledgerDir(['--config', '/nonexistent/estate.json'])));
   const cfgTmp = join(process.env.TMPDIR || '/tmp', `check-lenses-cfg-${process.pid}.json`);
   try {
     writeFileSync(cfgTmp, JSON.stringify({ ledger: null }));
+    ck('an explicit --ledger wins over the config', '/tmp/x',
+      ledgerDir(['--config', cfgTmp, '--ledger', '/tmp/x']));
+    ck('a missing config is fatal, not an empty sweep', true,
+      threw(() => ledgerDir(['--config', '/nonexistent/estate.json'])));
     ck('a config naming no ledger is fatal, not a fallback', true,
       threw(() => ledgerDir(['--config', cfgTmp])));
-    ck('but an explicit --ledger still wins over the config', '/tmp/x',
-      ledgerDir(['--config', cfgTmp, '--ledger', '/tmp/x']));
   } finally {
     rmSync(cfgTmp, { force: true });
   }

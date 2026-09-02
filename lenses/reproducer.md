@@ -104,7 +104,8 @@ Execution output IS the anchor; your verdicts are anchored by construction --
 set `"anchored": true` whenever the note carries literal command output. The
 pattern replicates across eight independent studies (EvalPlus, Self-Debugging,
 Stechly arXiv 2310.12397, Valmeekam, MT-Bench reference-guided, Guey arXiv
-2606.20093: self-preference VANISHES under a deterministic verifier).
+2606.20093: no detectable self-preference under a deterministic verifier,
+with effects under ~13pp not excluded).
 CANNOT-VERIFY routes: name the missing harness or resource.
 
 Note that this is why the gate requires at least one ANCHORED SAFE rather than
@@ -112,9 +113,11 @@ counting SAFEs. Usually that anchor is yours.
 
 ## The harness is also under test
 
-Be adversarial about the evaluation itself, not only the claim. Sakana's AI CUDA
-Engineer reported a headline speedup that collapsed once the evaluation was
-audited (their own follow-up: arXiv 2509.14279) -- reward-hacked harness. This estate has its own scar: a reported kernel pool bug
+Be adversarial about the evaluation itself, not only the claim. Sakana's own
+robust-kbench paper (arXiv 2509.14279) found KernelBench loopholes severe
+enough that its measured average speedup fell from 3.13x to 1.49x once
+contaminated tasks were excluded -- the harness, not the kernel, was producing
+the number. This estate has its own scar: a reported kernel pool bug
 was retracted as a harness artifact after the harness, not the code, turned out
 to be wrong. Before trusting a `produced_by` or bench command, ask what would
 make it lie: cached results, a mocked dependency, a comparison against the wrong

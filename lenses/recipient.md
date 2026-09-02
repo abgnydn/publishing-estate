@@ -136,8 +136,9 @@ standing:
    DO-NOT-POST.
 2. ADVISORY ONLY: the audience simulation -- how a named person will feel,
    what they will reply. Simulated audiences run near coin-flip on unfamiliar
-   constructs (52% overall, 23% on the hardest; arXiv 2607.03091) with
-   documented variance collapse. Write these as annotations in the note. They
+   constructs (52% overall, 23% on the hardest; arXiv 2607.03091) — and that
+   paper finds variance collapse affects the supervised baselines too, so it
+   is not a simulation-specific tell. Write these as annotations in the note. They
    never carry a verdict on their own, and "this might land badly" without a
    rules basis is not DO-NOT-POST.
 

@@ -257,7 +257,8 @@ export function gitSilence(name, lastCommit) {
 // to gate; scoring that as gated gives credit for a property it cannot have
 // and flatters the emptiest repos. But unverifiable is not inapplicable: an
 // unreachable criterion stays in the denominator and is never met, so a
-// missing tool can only lower the score, never lift it.
+// missing tool can never lift the score (it does not always lower it — a
+// criterion that was already unmet leaves the ratio unchanged).
 export const CRITERIA = [
   ['ci', (x) => x.workflows > 0],
   ['tests', (x) => (x.workflows > 0 ? x.hasTests : null)],

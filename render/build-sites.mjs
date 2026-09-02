@@ -61,7 +61,11 @@ const headline = (path) => STAT_CONTEXT.test(path) || TAGLINE_CONTEXT.test(path)
 // A digit that starts a standalone number. The lookbehind spares names that
 // carry digits (Phi-3, Geant4-DNA, b1.58, 2B4T is handled below): a digit
 // glued to a letter, hyphen or dot is part of a name, not a metric.
-const METRIC_DIGIT = /(?<![A-Za-z0-9.\-])\d[\d.,]*(?![A-Z]\d)/;
+// The lookbehind spares hyphenated names (Phi-3, Geant4-DNA); the optional
+// leading minus keeps a SIGNED literal graded — "-22%" is the founding
+// incident's inverted sign, and an earlier version spared it along with the
+// names.
+const METRIC_DIGIT = /(?<![A-Za-z0-9.\-])-?\d[\d.,]*(?![A-Z]\d)/;
 
 function resolve(str, path) {
   // {{fact:id}}         -> the value alone

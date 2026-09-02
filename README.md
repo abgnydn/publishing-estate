@@ -2,10 +2,10 @@
 
 A governance system for one person publishing technical claims across many
 surfaces. It has two invariants. A number reaches a stat tile in rendered site
-data only through a registry id — elsewhere in the rendered data a literal
-number is reported rather than blocked, and prose, this file included, is
-governed by the note on the numbers below — and nothing irreversible ships on
-one context's judgement. The
+data only through a registry id — in a tagline, a stat label or a short
+description a literal is reported rather than blocked, other rendered fields
+are not examined, and prose, this file included, is governed by the note on
+the numbers below — and nothing irreversible ships on one context's judgement. The
 mechanisms that enforce them are a fact registry with a render gate, a fleet of
 checkers that ask what is true right now, and a set of adversarial lenses whose
 verdicts are written to a sha256-bound ledger that a PreToolUse hook reads
@@ -41,9 +41,10 @@ measured here. A figure from this estate's own record is traceable to a row in
 deleting a number to updating it, and this file follows it everywhere the
 number is not itself the claim being made.
 
-**Requirements.** `node` (developed and tested on v24; plain ESM, no
+**Requirements.** `node` (developed and tested on v24; plain ESM, no npm
 dependencies), `jq`, `python3` and `shasum` for the gate and its test suite,
-`bash`. Four `produced_by` commands in the example registry point at the
+`bash`; three checkers shell out to binaries — `git` (check-memory, check-ci)
+and the `gh` CLI (check-reach) — and report UNREACHABLE where one is missing. Four `produced_by` commands in the example registry point at the
 author's checkouts and report UNREACHABLE on any other machine — treated as
 unverified, never as agreement. A fifth reads a live public endpoint, runs
 anywhere with network, and is compared against its declared drift band — on a
@@ -56,8 +57,9 @@ FACT-DRIFT and exits 1, which is the checker working.
 
 `facts/facts.json` is the single source for every number in a stat tile, and
 `render/build-sites.mjs` is the only path from the registry to the rendered
-data — it errors on a literal in a stat tile and reports every literal it
-finds elsewhere. There is no path for a hand-typed number into a stat tile.
+data — it errors on a literal in a stat tile and reports one in a tagline, a
+stat label or a short description; other rendered fields are not examined.
+There is no path for a hand-typed number into a stat tile.
 
 ```mermaid
 flowchart TD
@@ -263,9 +265,11 @@ visible change anywhere. The only way to see it is to remember what the DOI
 resolved to last time.
 
 **The fault case is required, not optional.** Every checker's `--selftest` ends
-with a block in which broken input HARD-FAILS: a missing config, a malformed
-config, a config naming nothing to check, an unreadable ledger entry, an
-unreadable workflow file. That rule exists because three checkers once ran with
+with a block in which broken input stops the run: a missing config, a malformed
+config and a config naming nothing to check each exit 2. An unreadable ledger
+entry and an unreadable workflow file are reported as findings and the sweep
+continues, because dropping them silently is the failure being guarded
+against. That rule exists because three checkers once ran with
 a flag that routed their findings through the suppressed output channel, and one
 had never successfully reported in any scheduled sweep at all. Nothing noticed,
 because a broken sweep and a clean one produce the same output. The corollary is
@@ -423,9 +427,11 @@ everything gets turned off.
 
 `test/hook-test.sh` is an adversarial and regression suite, written fail-first.
 Its first block is the audit corpus: every string in it was a working bypass of
-an earlier version of the gate, and each was confirmed to be allowed by the
-version of the hook that preceded its fix. It runs against a throwaway ledger
-directory and never touches a real one.
+an earlier version of the gate. The model-hub, argument-order and
+spelling-variant cases are confirmed against this repository's own hook
+history; the earlier cases predate it and were confirmed against the author's
+installed hook. It runs against a throwaway ledger directory and never touches
+a real one.
 
 ```
 $ bash test/hook-test.sh
@@ -447,12 +453,14 @@ PASS  an alias still counts as its canonical lens          PASSLED
 ── ledger scale: 600 entries under the timeout ──
 600-entry ledger scan wall time: <seconds> (must be well under 10)
 
-RESULT: 44 passed, 0 failed
+RESULT: <count> passed, 0 failed
 ```
 
-The wall time is the one line above that is a measurement rather than a
-verdict, so it is shown as a placeholder. Observed at 0 to 1 second on an
-M2 Max, against a bound of 10.
+Two lines above are placeholders. The wall time is a measurement rather than a
+verdict — observed at 0 to 1 second on an M2 Max, against a bound of 10. The
+pass count is a tally that grows with every regression case, so quoting it
+here would go stale on the next fix; the number that matters is failed, which
+must be 0.
 
 The three named audit-corpus lines above were the second round of holes, found
 by reading the matchers rather than by fuzzing them. Only the pull-request form
@@ -573,11 +581,12 @@ without a number cannot go stale.
 
 ### The audit trail is arriving as an obligation, and executing it is the durable part
 
-The NeurIPS 2026 PPT policy now requires, of flagged submissions, a pre-AI,
-post-AI and final version-history audit trail to avoid desk rejection,
+The NeurIPS 2026 PPT policy now requires, of flagged submissions given the
+opportunity to appeal, a pre-AI, post-AI and final version-history audit trail,
 and states the expectation directly: "We expect that in future years this kind
-of audit trail will become a default." The provenance design here was
-not built to the requirement, and satisfies it.
+of audit trail will become a default." The provenance design here was not
+built to the requirement; whether it satisfies the policy's three checkpoints
+has not been checked.
 
 The distinction that matters is deposition against reproduction. Registering a `produced_by` command is
 deposition. Executing it on a schedule is reproduction, and it is the part that
@@ -595,10 +604,10 @@ bypass (arXiv 2606.15549). Two evasion shapes are matched explicitly (`${IFS}`,
 canonicalization before matching and an egress boundary. Neither is
 implemented here.
 
-**The lenses share a model family.** Four lenses from one family carry roughly
-1.7 effective votes — a derived estimate, applying the Kish effective-sample
-formula to the error correlations reported in arXiv 2605.29800, not a figure
-that paper states. The anchored-SAFE requirement mitigates this and does not
+**The lenses share a model family.** Four lenses from one family carry far
+fewer than four independent votes; the correlations behind that statement are
+reported in arXiv 2605.29800, and no derived figure is quoted here because the
+derivation is not committed. The anchored-SAFE requirement mitigates this and does not
 remove it. Evidence-disjoint lens plumbing and a cross-family reproducer are
 identified as the next improvements and are not built. Identical evidence
 supplied to multiple judges produces herding (arXiv 2607.01661), and roughly
@@ -683,9 +692,9 @@ The registry and the render gate. It is useful the day you install it.
 
 This system was built agent-orchestrated with Claude, beginning 2026-08-14, in
 the course of publishing real work. Nothing here was designed in
-advance. Every mechanism was added after a failure, and
-[`docs/incidents.md`](docs/incidents.md) maps each mechanism to the incident
-that produced it.
+advance. Most mechanisms were added after a failure recorded in
+[`docs/incidents.md`](docs/incidents.md); graded severity and the drift band
+carry their incidents in the code and the registry instead.
 
 The shape of that table is itself a finding. Read the "what happened" column:
 a recurring shape is a correct thing that stopped being correct rather than a
@@ -693,11 +702,13 @@ mistake made at the time of writing, and most of the rest are guards that were
 never adequate and were found later. Publishing systems are usually built to
 catch errors at authoring time, and little here failed at authoring time.
 
-Release of this repository is gated on the system it describes: before any
-version of this file ships, it must carry at least two SAFE ledger entries for
-its exact sha256, at least one of them anchored — a verdict whose note cites
-executed output, a fetched primary source, or file:line evidence. Editing the
-file revokes those entries, which is the behaviour the gate exists to have.
+Release of this repository is held to the condition the system describes,
+by the owner rather than by the hook — a plain `git push` is ungated by
+design, and `test/hook-test.sh` asserts that: before any version of this file
+ships, it must carry at least two SAFE ledger entries for its exact sha256, at
+least one of them anchored — a verdict whose note cites executed output, a
+fetched primary source, or file:line evidence. Editing the file revokes those
+entries, which is the behaviour the gate exists to have.
 
 ## License
 

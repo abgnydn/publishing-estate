@@ -245,15 +245,18 @@ for f in sorted(d.glob("*.json")):
     esha, lens, verdict = e.get("artifact_sha256"), e.get("lens"), e.get("verdict")
     # Two spellings of one lens are not two reviewers. The quorum counts
     # DISTINCT names, so `claims` beside `claim-auditor` cleared a two-reviewer
-    # bar on one review. Normalise before anything is counted — the regex must
-    # collapse runs of any whitespace or underscore, exactly like normalise()
-    # in gate/lens-names.mjs, or "claim  auditor" is a second reviewer again.
+    # bar on one review. Normalise before anything is counted — the separator
+    # class is written out explicitly, character-for-character the same set as
+    # SEPARATORS in gate/lens-names.mjs, because python \s and JS \s disagree
+    # at the edges (U+0085, U+001C, U+FEFF) and a BOM inside a lens name was
+    # enough to mint a second reviewer in one implementation and not the other.
     # Keep this alias map in step with ALIASES there (the canonical set lives
     # only there); gate/dry-run.mjs --selftest checks the alias pairs appear in
     # this file's text, and test/dry-run-agrees.sh asserts hook and dry run
     # reach the same verdict on the spelling-variant ledger states it covers.
     if lens:
-        lens = re.sub(r"[_\s]+", "-", lens.strip().lower())
+        seps = r"[_\t\n\v\f\r \x1c-\x1f\x85\xa0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]+"
+        lens = re.sub(seps, "-", lens.lower()).strip("-")
         lens = {"rendering-and-mechanics": "rendering",
                 "claims": "claim-auditor",
                 "claim-audit": "claim-auditor",

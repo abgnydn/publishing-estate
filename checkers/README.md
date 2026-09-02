@@ -43,9 +43,8 @@ rather than reproduced in code.
 
 ## The shape
 
-Every checker in the fleet ended up with the same five properties. They were not
-designed in; each was added after a sweep failed in a way that looked like
-success.
+Five properties recur across the fleet. None was designed in; each was added
+after a sweep failed in a way that looked like success.
 
 ### 1. Selftests inside the checker
 
@@ -58,9 +57,10 @@ self-check in the same process as the sweep, ahead of `--verify-cheap`. Wiring
 `--selftest` into every shipped sweep is open work.
 
 Every checker here carries one, and every one of them ends with the **fault
-case**: a missing config, a malformed config, a config naming nothing to check,
-an unreadable ledger entry or an unreadable workflow file must HARD-FAIL rather
-than sweep. That rule exists because three checkers once ran with a flag that
+case**: a missing config, a malformed config or a config naming nothing to
+check must HARD-FAIL rather than sweep, and an unreadable ledger entry or an
+unreadable workflow file must surface as a finding rather than be silently
+dropped. That rule exists because three checkers once ran with a flag that
 routed their findings through the suppressed output channel, and one had never
 successfully reported in any scheduled sweep at all. Nothing noticed, because a
 broken sweep and a clean one produce the same output.

@@ -11,9 +11,11 @@
 # door is shut, that the ledger behaves, and that two spellings of one lens
 # cannot pass for two reviewers.
 #
-# Every DENY case in the audit corpus was written fail-first and confirmed to
-# be allowed by the version of the hook that preceded its fix. The ALLOW cases
-# are controls: they assert the gate did not become over-broad.
+# Every DENY case in the audit corpus was a working bypass when written. The
+# model-hub, argument-order and spelling-variant cases are confirmed against
+# this repository's own hook history; the earlier cases predate it and were
+# confirmed against the author's installed hook. The ALLOW cases are controls:
+# they assert the gate did not become over-broad.
 #
 # The suite runs against a throwaway ledger directory, so it never touches the
 # real one and can be run on a machine that has no ledger at all.
@@ -140,6 +142,11 @@ mk2 "claim  auditor" SAFE
 run "a double-space spelling is the same lens"   DENY Bash "$V $A=$ART2 $GH issue comment 1 --body hi"
 mk2 "claim$(printf '\t')auditor" SAFE
 run "a tab spelling is the same lens"            DENY Bash "$V $A=$ART2 $GH issue comment 1 --body hi"
+# Python \s and JS \s disagree at the edges, so the separator class is written
+# out explicitly in both copies. A BOM (U+FEFF) inside a lens name was enough
+# to mint a second reviewer in the hook while the dry run denied.
+mk2 "claim$(printf '\xef\xbb\xbf')auditor" SAFE
+run "a BOM spelling is the same lens"            DENY Bash "$V $A=$ART2 $GH issue comment 1 --body hi"
 # Normalisation must not lose a real reviewer: an alias still counts as the
 # canonical lens it names.
 mk2 reproduction SAFE

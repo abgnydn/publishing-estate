@@ -57,6 +57,7 @@ rm -f "$LED/$SHA-"*.json
 # must not mint a second reviewer in one readout and not the other.
 mk "claim  auditor" SAFE true; mk claim-auditor SAFE; cmp_ "double-space spelling is one reviewer"
 mk "claim$(printf '\t')auditor" SAFE; cmp_ "tab spelling is the same lens"
+mk "claim$(printf '\xef\xbb\xbf')auditor" SAFE; cmp_ "BOM spelling is the same lens"
 echo edited >> "$ART";    cmp_ "artifact edited after approval"
 
 echo

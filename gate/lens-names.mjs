@@ -32,7 +32,18 @@ export const ALIASES = {
   reproduction: 'reproducer',
 };
 
+// One explicit separator class, written in escapes so no invisible character
+// hides in this source, and character-for-character the same set as the
+// python copy in the hook. JS \s and python \s disagree at the edges
+// (U+0085, U+001C, U+FEFF), which was enough to let a BOM inside a lens name
+// mint a second reviewer in one implementation and not the other.
+const SEPARATORS =
+  /[_\t\n\v\f\r \u001c-\u001f\u0085\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]+/g;
+
 export function normalise(lens) {
-  const n = String(lens ?? '').trim().toLowerCase().replace(/[_\s]+/g, '-');
+  const n = String(lens ?? '')
+    .toLowerCase()
+    .replace(SEPARATORS, '-')
+    .replace(/^-+|-+$/g, '');
   return ALIASES[n] ?? n;
 }

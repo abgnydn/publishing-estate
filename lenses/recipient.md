@@ -144,7 +144,7 @@ standing:
 
 Judge the substance, not the formatting: mentally strip markdown before
 judging -- style bias (markdown over plain prose) now measures 0.10-0.76,
-exceeding position bias tenfold (arXiv 2604.23178).
+where position bias is at or below 0.04 (arXiv 2604.23178).
 
 ## Blinding
 

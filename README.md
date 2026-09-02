@@ -512,8 +512,9 @@ That last data point set the design. A guard that always fires gets bypassed,
 and a bypassed guard is worse than none because it leaves the belief that a
 guard is running. Grading severity by surface class is what makes this gate
 survivable: ERROR in a stat tile, where a number is read as a claim and the
-tile can always be redesigned; WARNING in a tagline or prose, where model
-specifications, physics scales and citation years legitimately carry digits.
+tile can always be redesigned; WARNING in a tagline, a stat label or a short
+description, where model specifications, physics scales and citation years
+legitimately carry digits.
 W3C Bitstring Status List 1.0 (Recommendation, 2025-05-15) is a finished
 standards hook for status lifecycles that nobody has yet pointed at research
 claims.

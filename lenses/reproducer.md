@@ -102,7 +102,7 @@ single file.
 
 Execution output IS the anchor; your verdicts are anchored by construction --
 set `"anchored": true` whenever the note carries literal command output. The
-pattern replicates across eight independent studies (EvalPlus, Self-Debugging,
+pattern replicates across independent studies (EvalPlus, Self-Debugging,
 Stechly arXiv 2310.12397, Valmeekam, MT-Bench reference-guided, Guey arXiv
 2606.20093: no detectable self-preference under a deterministic verifier,
 with effects under ~13pp not excluded).

@@ -108,8 +108,9 @@ makes a quiet week look like a dead project.
 A guard that always fires gets bypassed. A comparable public gate, found in
 the author's unpublished survey of the space, was switched off by its own
 author for noise. Grading is
-what keeps a gate on: ERROR where a number is read as a claim, WARN where prose
-legitimately carries model specs and citation years.
+what keeps a gate on: ERROR where a number is read as a claim, WARN in the
+tagline, stat-label and short-description fields, which legitimately carry
+model specs and citation years.
 
 `check-orphans.mjs` grades by ranking rather than filtering. A number beside a
 unit is claim-shaped and sorts to the top; a number beside "followers" is
@@ -188,8 +189,8 @@ The block opens with a planted-defect case and closes with the fault case.
 Every selftest here contains both: at least one case whose only job is to
 prove the checker can still see a planted defect, and a closing block in which
 broken config input hard-fails instead of sweeping. Two of the six
-(`check-orphans`, `check-deployed`) also name that case `positive control`
-explicitly.
+(`check-orphans`, `check-deployed`) label a planted-defect case
+`positive control` outright; three more name it in the comment above the case.
 
 Then the shipped example, which sweeps the two fixture surfaces. Context
 strings are elided at both ends by the checker itself:

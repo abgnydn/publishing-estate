@@ -1,7 +1,8 @@
 // config.mjs — where a checker's surfaces come from.
 //
-// No checker in this directory hard-codes a domain, an account, a checkout
-// path or a port. Each one takes `--config <file>` and reads the shape
+// No checker in this directory hard-codes a surface, an account, a checkout
+// path or a port; the only hostnames in the sources are the public API
+// endpoints they query. Each one takes `--config <file>` and reads the shape
 // documented in estate.example.json, or takes the one or two paths it needs as
 // arguments. That is the whole of what "curated" means here: the mechanism
 // ships, the estate it was pointed at does not.

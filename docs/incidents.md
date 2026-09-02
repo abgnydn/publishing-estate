@@ -22,8 +22,8 @@ second. `checkers/README.md` quotes that fixture — both the bare line and the
 checker's finding on it — inside the same demonstration. None of these asserts
 the number. Everywhere else in this repository a withdrawn value is a defect.
 The sweep that classifies these — like the social-card sweep and the DOI
-checker in three rows below — runs on the author's machine and is not in this
-repository; the rows record the incidents that shaped it.
+checker, each with its own row below — runs on the author's machine and is not
+in this repository; the rows record the incidents that shaped them.
 
 | what happened | what now exists |
 |---|---|
@@ -50,7 +50,7 @@ repository; the rows record the incidents that shaped it.
 | **Nothing answered "is any of this landing"** (2026-08). Every check asked whether a published number was wrong. The record already held the shape of the problem — the preprints travelled while the runnable software records sat in single digits — and the asymmetry stayed invisible until someone went looking. | `checkers/check-reach.mjs`: read the public counters for the archival records, the repositories and the model hub. A source that did not answer is UNREACHABLE and never a zero, because a missing number and a real zero mean opposite things here, and conflating them makes a quiet week look like a dead project. |
 | **A lens-name typo counted as a second distinct reviewer** (2026-08). The gate counts distinct lens names. The ledger held both `claims` and `claim-auditor`, and both `rendering` and `rendering and mechanics`. One review satisfied a two-review quorum. | The gate normalises lens names before it counts anything, and `checkers/check-lenses.mjs` reads the ledger as a surface: names outside the canonical set, quorums that hold only before normalisation, lenses run one at a time when they are independent by construction, and SAFE verdicts carrying no evidence at all. |
 | **Three checkers ran with a flag that silenced their findings, and one had never successfully reported at all** (2026-08). `--quiet` was meant to mean "findings only" and was routing findings through the suppressed channel, so those checkers exited non-zero with empty output. One checker had not reported successfully in any scheduled sweep, and nothing noticed, because a broken sweep and a clean one produce the same output. | The fault case, required in every selftest. A missing config, a malformed config, a config naming nothing to check, an unreadable ledger entry and an unreadable workflow file each hard-fail rather than produce a clean sheet. A finding never travels through an optional output channel. |
-| **The publish gate did not cover the model hub, and the regex meant to cover it could never match anything** (2026-08). Only the `--create-pr` form and the old CLI were gated, so the safer shape — a reviewable pull request — was blocked while a direct write to main was not, and a push to a Space repository was not covered at all. The git-push matcher that should have closed the gap — in the author's installed hook; this repository's own history carried no git-push matcher at all — had a `\\.` inside a single-quoted bash regex; bash performs no escape processing there, so grep received backslash-backslash-dot and matched a literal backslash. Separately, the curl matchers required the write flag to appear after the host, so the same command with its arguments in the other order passed. | Upload, repo-write, CLI, git-push and curl forms all matched; both argument orders matched; every form is a regression test in `test/hook-test.sh`, each confirmed to pass the previous hook before the fix landed. |
+| **The publish gate did not cover the model hub, and the regex meant to cover it could never match anything** (2026-08). Only the `--create-pr` form and the old CLI were gated, so the safer shape — a reviewable pull request — was blocked while a direct write to main was not, and a push to a Space repository was not covered at all. The git-push matcher that should have closed the gap — in the author's installed hook; this repository's own history carried only a `gh-pages` git-push matcher and none covering a model-hub host — had a `\\.` inside a single-quoted bash regex; bash performs no escape processing there, so grep received backslash-backslash-dot and matched a literal backslash. Separately, the curl matchers required the write flag to appear after the host, so the same command with its arguments in the other order passed. | Upload, repo-write, CLI, git-push and curl forms all matched; both argument orders matched; every form is a regression test in `test/hook-test.sh`, each confirmed to pass the previous hook before the fix landed. |
 | **A ledger entry proved that something had been reviewed and never what** (2026-08). Entries are keyed by sha256 alone. Once the artifact file changed, moved, or the scratch directory holding it was deleted, nothing could reconstruct the bytes a lens had actually read. | `gate/dry-run.mjs --archive` copies the verified bytes to `<sha256>.body` beside the entry, and refuses to write a body whose hash is not the name it would be stored under — so a drifted file cannot quietly become the record of what was approved. |
 | **The only way to learn the gate's verdict was to attempt the publish** (2026-08). A bad way to ask a question whose wrong answer is a notification that has already been emailed to everyone subscribed to the thread. | `gate/dry-run.mjs` reads the ledger and prints the verdict the hook would reach, in the hook's own order of precedence, and can approve nothing. `test/dry-run-agrees.sh` puts the same ledger states to both and fails on any disagreement, because a readout that has drifted from the rule it claims to read out is worse than no readout. |
 | **Review lenses ran at whatever model and reasoning effort the spawning session happened to be using** (2026-08). Two runs of nominally the same quorum were therefore not the same quorum, and nothing on the ledger entry recorded which had happened. | `docs/tiers.md`: three capacity tiers for pipeline agents, start at the lowest that can do the job, escalate only on a specific demonstrated failure. Lenses are the exception and declare model and effort in their own frontmatter, so quorum quality cannot degrade because of an ambient setting somewhere else. |
@@ -59,13 +59,16 @@ repository; the rows record the incidents that shaped it.
 
 Two things.
 
-First, every rule in this system is traceable to a line in this table. If you
+First, nearly every rule in this system is traceable to a line in this table
+(graded severity and the drift band carry their incidents in the code and the
+registry instead). If you
 adopt a mechanism, adopt it because you recognise the incident, not because it
 is here. A rule with no incident behind it is a guess, and guesses about your
 own failure modes are usually wrong in the flattering direction.
 
 Second, the shape of the list is itself a finding. Read the "what happened"
-column and count how many are *a correct thing that stopped being correct*
-rather than *a mistake made at the time of writing*. The count is most of them.
-Publishing systems are usually built to catch errors at authoring time. Almost
-nothing here failed at authoring time.
+column: a recurring shape is *a correct thing that stopped being correct*
+rather than *a mistake made at the time of writing*, and most of the rest are
+guards that were never adequate and were found later. Publishing systems are
+usually built to catch errors at authoring time. Little here failed at
+authoring time.

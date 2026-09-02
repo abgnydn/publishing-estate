@@ -234,7 +234,7 @@ fi
 # was O(3n) subprocesses; past ~580 entries it would blow the hook timeout,
 # and a timed-out hook does not block.
 ledger_scan=$(python3 - "$ledger_dir" "$sha" "$artifact" <<'PY'
-import json, pathlib, sys
+import json, pathlib, re, sys
 d, sha, art = pathlib.Path(sys.argv[1]), sys.argv[2], sys.argv[3]
 safe, bad, stale, skipped, anchored = [], [], [], [], []
 for f in sorted(d.glob("*.json")):
@@ -245,11 +245,15 @@ for f in sorted(d.glob("*.json")):
     esha, lens, verdict = e.get("artifact_sha256"), e.get("lens"), e.get("verdict")
     # Two spellings of one lens are not two reviewers. The quorum counts
     # DISTINCT names, so `claims` beside `claim-auditor` cleared a two-reviewer
-    # bar on one review. Normalise before anything is counted. Keep this map in
-    # step with CANONICAL/ALIASES in gate/lens-names.mjs, the other of the two
-    # deliberate copies; gate/dry-run.mjs --selftest fails if they disagree.
+    # bar on one review. Normalise before anything is counted — the regex must
+    # collapse runs of any whitespace or underscore, exactly like normalise()
+    # in gate/lens-names.mjs, or "claim  auditor" is a second reviewer again.
+    # Keep this alias map in step with ALIASES there (the canonical set lives
+    # only there); gate/dry-run.mjs --selftest checks the alias pairs appear in
+    # this file's text, and test/dry-run-agrees.sh asserts hook and dry run
+    # reach the same verdict on the spelling-variant ledger states it covers.
     if lens:
-        lens = lens.strip().lower().replace("_", "-").replace(" ", "-")
+        lens = re.sub(r"[_\s]+", "-", lens.strip().lower())
         lens = {"rendering-and-mechanics": "rendering",
                 "claims": "claim-auditor",
                 "claim-audit": "claim-auditor",

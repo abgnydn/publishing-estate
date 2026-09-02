@@ -24,8 +24,10 @@ or a schedule. The only hostnames in the sources are the public API endpoints
 they query. Every one of them reads
 [`estate.example.json`](estate.example.json) through
 [`config.mjs`](config.mjs), or takes the one or two paths it needs as
-arguments. Copy the example to `estate.json`, point it at your own surfaces, and
-the checkers work unchanged.
+arguments. Copy the example to `estate.json`, point it at your own surfaces,
+and the checkers work unchanged — except `check-lenses.mjs`, which reads it
+only when passed `--config` and otherwise resolves its ledger from the
+environment.
 
 **Surfaces-out.** The example config points at
 [`fixtures/`](fixtures/) rather than at anything live, so the shipped example
@@ -103,8 +105,9 @@ makes a quiet week look like a dead project.
 
 ### 4. Graded severity, and a per-finding tolerance that is declared
 
-A guard that always fires gets bypassed. A comparable public gate we found was
-switched off by its own author for noise. Grading is
+A guard that always fires gets bypassed. A comparable public gate, found in
+the author's unpublished survey of the space, was switched off by its own
+author for noise. Grading is
 what keeps a gate on: ERROR where a number is read as a claim, WARN where prose
 legitimately carries model specs and citation years.
 
@@ -140,8 +143,9 @@ for it is not here.
 
 ## The classes
 
-One line per class, with the incident each answers. The six marked **ships**
-are in this directory.
+One line per class, with the incident each answers. Seven classes ship: the
+six marked **Ships.** are in this directory, and `facts` ships from
+`facts/check-facts.mjs`.
 
 | class | watches for | born from |
 |---|---|---|

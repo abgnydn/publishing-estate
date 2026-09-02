@@ -1,16 +1,18 @@
 # publishing-estate
 
 A governance system for one person publishing technical claims across many
-surfaces. It has two invariants. A number reaches rendered site data only
-through a registry id — prose, this file included, is governed by the note on
-the numbers below, not by the render gate — and nothing irreversible ships on
+surfaces. It has two invariants. A number reaches a stat tile in rendered site
+data only through a registry id — elsewhere in the rendered data a literal
+number is reported rather than blocked, and prose, this file included, is
+governed by the note on the numbers below — and nothing irreversible ships on
 one context's judgement. The
 mechanisms that enforce them are a fact registry with a render gate, a fleet of
 checkers that ask what is true right now, and a set of adversarial lenses whose
 verdicts are written to a sha256-bound ledger that a PreToolUse hook reads
-before it allows a publish command to run. Every mechanism here was added after
-a specific failure, and each one is traceable to a row in
-[`docs/incidents.md`](docs/incidents.md).
+before it allows a publish command to run. Most mechanisms here were added after
+a specific failure recorded in [`docs/incidents.md`](docs/incidents.md); two —
+graded severity and `drift_tolerance_pct` — carry their incident in the code
+and the registry instead.
 
 ## Why it exists
 
@@ -23,7 +25,7 @@ project's founding comparison was inverted on a live page and had been for
 weeks.
 
 Nothing in that failure happened at authoring time. Each of the three copies
-was correct when it was written. The system was built and battle-tested
+was correct when it was written. The system was built and tested
 beginning 2026-08-14, in the course of publishing real work, against that class
 of defect: a correct thing that stopped being correct, on a surface nobody
 owned.
@@ -44,15 +46,18 @@ dependencies), `jq`, `python3` and `shasum` for the gate and its test suite,
 `bash`. Four `produced_by` commands in the example registry point at the
 author's checkouts and report UNREACHABLE on any other machine — treated as
 unverified, never as agreement. A fifth reads a live public endpoint, runs
-anywhere with network, and is compared inside its declared drift band.
+anywhere with network, and is compared against its declared drift band — on a
+day the live counter has moved beyond the band, `--verify-cheap` reports
+FACT-DRIFT and exits 1, which is the checker working.
 
 ---
 
 ## 1. The fact registry and the render gate
 
-`facts/facts.json` is the single source for every number that appears in
-rendered site data. `render/build-sites.mjs` is the only path from that
-registry to it. There is no path for a hand-typed number into a stat tile.
+`facts/facts.json` is the single source for every number in a stat tile, and
+`render/build-sites.mjs` is the only path from the registry to the rendered
+data — it errors on a literal in a stat tile and reports every literal it
+finds elsewhere. There is no path for a hand-typed number into a stat tile.
 
 ```mermaid
 flowchart TD
@@ -71,7 +76,9 @@ flowchart TD
 
 ### The rules
 
-1. No number appears on any public surface unless it has an id in the registry.
+1. No number reaches a stat tile without an id in the registry — the gate
+   enforces this — and no number belongs on any owned public surface without
+   one, which the checker fleet sweeps for rather than blocks.
 2. `produced_by` must be a command that can be run. If it cannot, the status is
    `unbacked`, and the number may not appear in a headline, tagline or stat
    tile.
@@ -113,8 +120,9 @@ redesignable, and read as a claim, so a literal number there is an ERROR. A
 tagline mixes metrics with product names, and prose legitimately carries model
 specifications, physics scales and citation years, so a literal number in
 either is a WARNING that is reported and does not block. A comparable public
-gate we found was switched off by its own author for noise. Grading by surface
-is what keeps this one turned on.
+gate, found in the author's unpublished survey of the space, was switched off
+by its own author for noise. Grading by surface is what keeps this one turned
+on.
 
 ### Running the example
 
@@ -171,7 +179,7 @@ Exit 1, and nothing is written.
 The fact id in that first line contains a retracted value. It is reproduced
 here as the gate's own refusal of that value and never as a claim, which is the
 DISCLOSED-rather-than-LIVE case the withdrawn sweep is built to distinguish.
-`docs/incidents.md` records the three other places in this repository where a
+`docs/incidents.md` enumerates the other places in this repository where a
 withdrawn value legitimately appears.
 
 ---
@@ -190,9 +198,9 @@ or a schedule, and every one reads
 [`checkers/estate.example.json`](checkers/estate.example.json) or takes the
 paths it needs as arguments. **Surfaces-out**: the shipped example points at
 fixtures rather than at anything live, so it sweeps offline on any clone.
-The classes that did not survive that — the ones which are almost entirely a
-list of one person's surfaces and one person's retracted values — are described
-rather than shipped. [`checkers/README.md`](checkers/README.md) has the full
+The classes that did not survive curation are described rather than shipped;
+two of them, **numbers** and **withdrawn**, are almost entirely a list of one
+person's surfaces and one person's retracted values. [`checkers/README.md`](checkers/README.md) has the full
 description and the classes.
 
 The shape, as the live fleet runs it. The runner and its schedule are not in
@@ -448,10 +456,11 @@ M2 Max, against a bound of 10.
 
 The three named audit-corpus lines above were the second round of holes, found
 by reading the matchers rather than by fuzzing them. Only the pull-request form
-of a model-hub upload was gated, so the *safer* shape was blocked and a direct
-write to main was not; the matcher that should have covered the gap — in the
-author's installed hook; this repository's own history had no git-push matcher
-at all — carried a `\\.` inside a single-quoted bash regex, which matches a
+and the old CLI were gated at the model hub, so the *safer* shape was blocked
+and a direct write to main was not; the matcher that should have covered the
+gap — in the author's installed hook; this repository's own history carried
+only a `gh-pages` git-push matcher and none covering a model-hub host —
+carried a `\\.` inside a single-quoted bash regex, which matches a
 literal backslash and therefore never fired; and the curl matchers required the write flag to
 appear after the host, so the same command with its arguments in the other order
 passed.
@@ -514,9 +523,10 @@ steers the operator wrong, while a false negative only slows things down
 The sharpest result here is Stechly et al. (arXiv 2310.12397). Self-critique
 made models worse, from 16% to 1%, while an external verifier reached roughly
 40%. The control is what matters: with the sound verifier still deciding
-correctness, randomized and even fabricated feedback reached the same roughly
-40% — the critique content is irrelevant, and the external check carries the
-value. Guey and Bougault (arXiv 2606.20093) is the complement: with validity
+correctness, roughly 40% held whether the feedback was binary, a single error,
+the full error list, or the LLM's own hallucinated critique, and the paper's
+fabricated-feedback condition left performance unaffected — the critique
+content is irrelevant, and the external check carries the value. Guey and Bougault (arXiv 2606.20093) is the complement: with validity
 decided by a deterministic verifier, self-preference is weak or absent — no
 detectable effect, with anything under roughly 13 points not excluded at their
 sample size.
@@ -528,12 +538,9 @@ estate's own record. Every defect that survived multiple reading passes was
 caught by running something.
 
 The reproducer is additionally instructed to be adversarial about its own
-harness. Sakana's AI CUDA Engineer reported a speedup that fell substantially
-once the evaluation was audited — a reward-hacked harness. This estate has a
-matching scar: a
-reported kernel-pool bug was retracted after the harness, rather than the code,
-turned out to be wrong. A number obtained from a compromised harness is
-CANNOT-VERIFY.
+harness. This estate has the scar: a reported kernel-pool bug was retracted
+after the harness, rather than the code, turned out to be wrong. A number
+obtained from a compromised harness is CANNOT-VERIFY.
 
 ### The guards themselves get fuzzed
 
@@ -564,16 +571,15 @@ the surface exists to make. Crosslink cards, footers, taglines, nav links and
 repo descriptions are decorative surfaces and carry zero numbers. A sentence
 without a number cannot go stale.
 
-### The audit trail is arriving as an obligation, and executing it is the moat
+### The audit trail is arriving as an obligation, and executing it is the durable part
 
-The NeurIPS 2026 PPT policy now requires, of flagged submissions appealing
-their desk rejection, a pre-AI, post-AI and final version-history audit trail,
+The NeurIPS 2026 PPT policy now requires, of flagged submissions, a pre-AI,
+post-AI and final version-history audit trail to avoid desk rejection,
 and states the expectation directly: "We expect that in future years this kind
 of audit trail will become a default." The provenance design here was
 not built to the requirement, and satisfies it.
 
-The more useful finding is USENIX's natural experiment. Artifact deposition was
-mandated, and reproduction stayed flat. Registering a `produced_by` command is
+The distinction that matters is deposition against reproduction. Registering a `produced_by` command is
 deposition. Executing it on a schedule is reproduction, and it is the part that
 almost nobody does. That is what `--verify-cheap` on a weekly cron is for, and
 it is where the durable value of this design sits.
@@ -612,8 +618,9 @@ user-presence key exists.
 splits its output for this reason. Its platform-rules check is scored against
 `platforms.json` and carries a verdict. Its simulation of how a named person
 will react does not, because simulated audiences run at 52% accuracy overall
-and 23% on the hardest constructs, with documented variance collapse (arXiv
-2607.03091).
+and 23% on the hardest constructs (arXiv 2607.03091); that paper also finds
+variance collapse is not specific to the simulating model — it affects the
+supervised baselines too.
 
 **Lens recall is unmeasured.** There is no seeded-defect fixture corpus, so the
 operating point of each lens is unknown. Rubric quality appears to matter far
@@ -645,8 +652,11 @@ The registry and the render gate. It is useful the day you install it.
 
 ### Full path
 
-4. Add the fleet. Copy `checkers/estate.example.json` to `estate.json` and point
-   it at your own surfaces; the six shipped checkers need nothing else. Then
+4. Add the fleet. Copy `checkers/estate.example.json` to `estate.json` and
+   point it at your own surfaces; five of the six shipped checkers need
+   nothing else, and `check-lenses.mjs` reads it only when passed `--config`,
+   otherwise resolving its ledger from `--ledger`, `PUBLISH_LEDGER_DIR`, then
+   the gate's default. Then
    build the **withdrawn** and **numbers** classes, which are described in
    `checkers/README.md` and are not shipped — they are the two that check what
    is live rather than what is in git, and every incident that survived longest
@@ -657,7 +667,9 @@ The registry and the render gate. It is useful the day you install it.
    publishes. Pin their model and effort in the definitions rather than
    inheriting either — see `docs/tiers.md`.
 6. Install `gate/verify-before-publish.sh` as a PreToolUse hook and run
-   `bash test/hook-test.sh` against your installed copy. Then fuzz it yourself.
+   `bash test/hook-test.sh` — it tests the repository's copy by default; point
+   `HOOK_UNDER_TEST` at your installed copy to test that instead. Then fuzz it
+   yourself.
    Eight bypasses took under an hour to find the first time this one was
    audited, and reading the matchers afterwards found more. Run
    `node gate/dry-run.mjs` when you want the verdict without the publish.
@@ -675,11 +687,11 @@ advance. Every mechanism was added after a failure, and
 [`docs/incidents.md`](docs/incidents.md) maps each mechanism to the incident
 that produced it.
 
-The shape of that table is itself a finding. Read the "what happened" column
-and count how many entries describe a correct thing that stopped being correct,
-rather than a mistake made at the time of writing. It is most of them.
-Publishing systems are usually built to catch errors at authoring time, and
-almost nothing here failed at authoring time.
+The shape of that table is itself a finding. Read the "what happened" column:
+a recurring shape is a correct thing that stopped being correct rather than a
+mistake made at the time of writing, and most of the rest are guards that were
+never adequate and were found later. Publishing systems are usually built to
+catch errors at authoring time, and little here failed at authoring time.
 
 Release of this repository is gated on the system it describes: before any
 version of this file ships, it must carry at least two SAFE ledger entries for

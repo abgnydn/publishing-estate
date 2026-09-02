@@ -8,10 +8,13 @@
 //
 // There are exactly two copies, deliberately:
 //   - this file, imported by gate/dry-run.mjs and checkers/check-lenses.mjs;
-//   - the same map inside the python block of gate/verify-before-publish.sh,
+//   - the alias map inside the python block of gate/verify-before-publish.sh,
 //     because that hook is copied out and installed on its own and must not
-//     depend on a checkout being present.
-// gate/dry-run.mjs --selftest reads the hook and fails if the two disagree.
+//     depend on a checkout being present. The canonical set lives only here.
+// gate/dry-run.mjs --selftest checks the hook's text still carries each alias
+// pair; test/dry-run-agrees.sh asserts hook and dry run reach the same verdict
+// on the spelling-variant ledger states it covers. Neither compares the two
+// normalisation functions symbolically — the agreement suite is the check.
 
 // A name outside this set is a typo, not a new lens. A genuinely new lens is
 // added here deliberately, which is the point. Two canonical names

@@ -19,7 +19,9 @@
 # real one and can be run on a machine that has no ledger at all.
 set -u
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-H="$ROOT/gate/verify-before-publish.sh"
+# HOOK_UNDER_TEST points the suite at an installed copy; default is this repo's.
+H="${HOOK_UNDER_TEST:-$ROOT/gate/verify-before-publish.sh}"
+[ -s "$H" ] || { echo "hook not found or empty: $H" >&2; exit 2; }
 
 # Explicit template: macOS `mktemp -d` with no template ignores TMPDIR and uses
 # the per-user Darwin temp dir, which a sandboxed shell may not be able to write.
@@ -131,6 +133,13 @@ mk2 claim-auditor SAFE
 run "two spellings of one lens are one reviewer" DENY Bash "$V $A=$ART2 $GH issue comment 1 --body hi"
 mk2 CLAIM_AUDITOR SAFE
 run "case and underscores are the same lens"     DENY Bash "$V $A=$ART2 $GH issue comment 1 --body hi"
+# Runs of whitespace must collapse like single separators do. A per-character
+# replace left "claim  auditor" (two spaces) and a tab distinct from
+# "claim-auditor", so a spelling variant was a second reviewer again.
+mk2 "claim  auditor" SAFE
+run "a double-space spelling is the same lens"   DENY Bash "$V $A=$ART2 $GH issue comment 1 --body hi"
+mk2 "claim$(printf '\t')auditor" SAFE
+run "a tab spelling is the same lens"            DENY Bash "$V $A=$ART2 $GH issue comment 1 --body hi"
 # Normalisation must not lose a real reviewer: an alias still counts as the
 # canonical lens it names.
 mk2 reproduction SAFE

@@ -52,6 +52,11 @@ rm -f "$LED/$SHA-"*.json
 # normalising the same way, this is where it shows.
 mk claims SAFE true; mk claim-auditor SAFE; cmp_ "two spellings of one lens"
 mk reproduction SAFE;     cmp_ "alias plus a real second lens"
+rm -f "$LED/$SHA-"*.json
+# Whitespace runs collapse in both implementations; a double space or a tab
+# must not mint a second reviewer in one readout and not the other.
+mk "claim  auditor" SAFE true; mk claim-auditor SAFE; cmp_ "double-space spelling is one reviewer"
+mk "claim$(printf '\t')auditor" SAFE; cmp_ "tab spelling is the same lens"
 echo edited >> "$ART";    cmp_ "artifact edited after approval"
 
 echo

@@ -17,10 +17,10 @@
 //
 //   1. SPLIT-QUORUM. The gate counts DISTINCT lens names. A ledger held
 //      `rendering` and `rendering and mechanics`, plus `claims` and
-//      `claim-auditor` — eight names for six reviewers. Two spellings of one
-//      lens satisfied a rule that is supposed to mean two independent ones, so
-//      one review cleared a two-review bar. The gate normalises names now; this
-//      reports the ledger entries that made it necessary.
+//      `claim-auditor`. Two spellings of one lens satisfied a rule that is
+//      supposed to mean two independent ones, so one review cleared a
+//      two-review bar. The gate normalises names now; this reports the ledger
+//      entries that made it necessary.
 //
 //   2. SERIAL. Lenses are independent by construction — each is given the
 //      artifact only, never the other findings — so they can always run at

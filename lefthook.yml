@@ -55,8 +55,9 @@ pre-push:
     hook-suite:
       run: bash test/hook-test.sh
 
-    # The dry run must reach the hook's verdict on every ledger state, or it is
-    # a second implementation of the rule rather than a readout of it.
+    # The dry run must reach the hook's verdict on every ledger state the
+    # suite covers, or it is a second implementation of the rule rather than a
+    # readout of it.
     dry-run-agrees:
       run: bash test/dry-run-agrees.sh
 

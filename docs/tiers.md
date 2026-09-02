@@ -44,14 +44,13 @@ Three things follow from pinning:
    wrong claim and the public. The saving is small and the failure is a
    notification that has already been emailed to everyone subscribed to the
    thread.
-2. **The ledger entry means something across time.** Two SAFE verdicts recorded
-   a month apart were produced under the same conditions, so comparing them is
-   meaningful and a regression in lens quality is a change somebody made rather
-   than weather.
-3. **`inherit` is not available.** The field is written out in each definition
-   rather than left to the harness, because a default that can be overridden
-   from outside is a default that will be, quietly, by whichever session is
-   cheapest to run.
+2. **Verdicts become comparable across time.** Two SAFE verdicts recorded a
+   month apart were produced under the same conditions — a property of the
+   pinning, not of the ledger entry, which records neither field — so a
+   regression in lens quality is a change somebody made rather than weather.
+3. **`inherit` is not used.** The field is written out in each definition
+   rather than left to the harness, because an ambient default changes
+   quietly, by whichever session is cheapest to run.
 
 The specific values in the frontmatter (`model:`, `effort:`) name one harness's
 settings and will not transfer verbatim. The rule that transfers is: pin them,

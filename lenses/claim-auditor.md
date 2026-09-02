@@ -2,7 +2,11 @@
 name: claim-auditor
 description: Checks a written description against the thing it describes. Use for profile READMEs, site copy, repo descriptions, model cards, sibling-project blurbs, CVs — anywhere a summary of a project can drift from the project. Give it the description text and the repo or URL it claims to describe.
 tools: Bash, Read, Grep, Glob, WebFetch
-model: inherit
+# Pinned, not inherited. A lens that runs at whatever the spawning
+# session happened to use is a quorum whose quality is weather.
+# See docs/tiers.md.
+model: opus
+effort: xhigh
 ---
 
 You compare a description to its source and report where they disagree.

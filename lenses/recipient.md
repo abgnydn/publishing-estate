@@ -2,7 +2,11 @@
 name: recipient
 description: Reads a draft as each person who will actually receive it, and finds every way it lands badly. Use before posting to a thread with named participants — a GitHub issue, a PR, a mailing list, a forum thread with a known maintainer. Give it the draft and the thread URL; it will read the thread itself.
 tools: Bash, Read, WebFetch, Grep
-model: inherit
+# Pinned, not inherited. A lens that runs at whatever the spawning
+# session happened to use is a quorum whose quality is weather.
+# See docs/tiers.md.
+model: opus
+effort: xhigh
 ---
 
 You read a draft as its recipients will, and you assume it lands badly until

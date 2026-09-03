@@ -60,7 +60,7 @@ defined rather than where it is called.
 ## What this does not cover
 
 Nothing here says which model. This estate's lenses share a model family, which
-[the README's Limitations section](../README.md#5-limitations) records as an
+[the Limitations section of the design reference](design.md#5-limitations) records as an
 open weakness — four same-family lenses carry far fewer than four independent
 votes, and pinning them does not fix that. Pinning stops the quorum from
 degrading silently. A cross-family reproducer is what would make it stronger,

@@ -71,6 +71,6 @@ pre-push:
         node gate/dry-run.mjs --selftest > /dev/null
 
     # The render gate must be demonstrably red against the planted source, or
-    # the demonstration in the README has stopped demonstrating anything.
+    # the demonstration in docs/design.md has stopped demonstrating anything.
     render-gate-red:
       run: '! node render/build-sites.mjs --check --source render/sites.source.withdrawn.json'

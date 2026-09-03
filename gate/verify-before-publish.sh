@@ -49,7 +49,7 @@
 # Known residual (documented, not solved here): shell obfuscation is a
 # denylist problem and denylists are fragile; the durable answer is
 # canonicalization and an egress boundary. See docs/incidents.md and the
-# Limitations section of the README.
+# Limitations section of docs/design.md.
 #
 # Rationale: docs/incidents.md
 

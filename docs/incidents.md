@@ -14,7 +14,7 @@ Further occurrences exist by construction, and the sweep classifies each as
 DISCLOSED rather than LIVE. `facts/facts.json` holds a `withdrawn` entry with
 its value intact, because recording that a value is retired is what the entry
 is for. `render/sites.source.withdrawn.json` names that entry by id so the gate
-can be watched refusing it. `README.md` quotes the gate's refusal with the
+can be watched refusing it. `docs/design.md` quotes the gate's refusal with the
 withdrawal note elided, and
 that quoted line carries the id. `checkers/fixtures/notes/zerotvm.md` plants
 the value twice — once bare and once inside its own retraction — so

@@ -1,6 +1,6 @@
 # The checker fleet
 
-Six checker sources ship here, curated. The pattern they converged on — the
+Seven checker sources ship here, curated. The pattern they converged on — the
 five properties and the incident behind each — is in
 [`docs/checker-pattern.md`](../docs/checker-pattern.md): the code is one
 estate's answer, the shape is everyone's.
@@ -116,6 +116,19 @@ CONFIG  the "reach" section names no zenodo record, github user or huggingface a
 Exit 2. That is the point, and it is what the fault case is for: a checker that
 prints a clean sheet because it had nothing to look at is the failure the whole
 fleet exists to prevent.
+
+`check-copies.mjs` compares a canonical file against its mirrors section by
+section. The shipped example points the clean fixture at the canonical, so the
+sweep is green; the drifted fixture is exercised only under `--selftest`:
+
+```
+$ node checkers/check-copies.mjs --config checkers/estate.example.json
+== 0 drift finding(s) across 1 copy set(s)
+```
+
+A missing or unreadable mirror is reported as a finding rather than silently
+dropped, because an offline copy and a stale copy look the same to anything that
+does not ask for both.
 
 Three properties of a runner matter, if you build one:
 

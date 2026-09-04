@@ -28,6 +28,11 @@
     "            missing one is a hard failure; with neither, PUBLISH_LEDGER_DIR",
     "            and then the gate's default apply. gate/dry-run.mjs does not",
     "            read this file; it takes --ledger or PUBLISH_LEDGER_DIR.",
+    "  copies    what check-copies reads. Each entry is {id, canonical, mirrors[],",
+    "            sections[]}; sections are headings matching /^## /. The canonical",
+    "            file is compared against every mirror, section by section, with",
+    "            bodies normalised (trim + collapse whitespace). The entry below",
+    "            points at the clean fixture, so the example sweep is green.",
     "",
     "Any section a checker needs and does not find is a hard failure. A checker",
     "that reports zero findings because it had nothing to look at is the failure",
@@ -55,5 +60,14 @@
 
   "reach": { "github_user": null, "hf_author": null, "zenodo": [] },
 
-  "ledger": null
+  "ledger": null,
+
+  "copies": [
+    {
+      "id": "fixture:standards",
+      "canonical": "fixtures/copies/canonical.md",
+      "mirrors": ["fixtures/copies/mirror-clean.md"],
+      "sections": ["Scope", "Method"]
+    }
+  ]
 }
